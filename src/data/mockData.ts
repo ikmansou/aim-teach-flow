@@ -122,6 +122,7 @@ export const students: Record<string, Student> = {
     aetSkills: [
       { label: "Relationships", color: "blue" },
       { label: "Flexibility", color: "orange" },
+      { label: "Social Awareness", color: "blue" },
     ],
     strengths: ["Logical thinking", "Following routines", "Written expression"],
     supportNeeds: ["Flexibility in tasks", "Peer interaction coaching"],
