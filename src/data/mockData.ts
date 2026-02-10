@@ -76,6 +76,7 @@ export const students: Record<string, Student> = {
     aetSkills: [
       { label: "Managing Emotions", color: "green" },
       { label: "Relationships", color: "blue" },
+      { label: "Sensory Processing", color: "red" },
     ],
     strengths: ["Visual learning", "Pattern recognition", "Reading comprehension"],
     supportNeeds: ["Social interaction prompts", "Transition support", "Sensory breaks"],
@@ -98,6 +99,7 @@ export const students: Record<string, Student> = {
     aetSkills: [
       { label: "Learning Through Play", color: "orange" },
       { label: "Communication", color: "purple" },
+      { label: "Managing Emotions", color: "green" },
     ],
     strengths: ["Creative expression", "Verbal storytelling", "Memory recall"],
     supportNeeds: ["Group work facilitation", "Emotional regulation support", "Clear instructions"],
@@ -120,6 +122,7 @@ export const students: Record<string, Student> = {
     aetSkills: [
       { label: "Relationships", color: "blue" },
       { label: "Flexibility", color: "orange" },
+      { label: "Social Awareness", color: "blue" },
     ],
     strengths: ["Logical thinking", "Following routines", "Written expression"],
     supportNeeds: ["Flexibility in tasks", "Peer interaction coaching"],
@@ -142,6 +145,7 @@ export const students: Record<string, Student> = {
     aetSkills: [
       { label: "Communication", color: "purple" },
       { label: "Sensory Processing", color: "red" },
+      { label: "Flexibility", color: "orange" },
     ],
     strengths: ["Technology skills", "Visual processing", "Determination"],
     supportNeeds: ["AAC support", "Extended processing time", "Modified worksheets"],
@@ -187,6 +191,7 @@ export const students: Record<string, Student> = {
     aetSkills: [
       { label: "Managing Emotions", color: "green" },
       { label: "Communication", color: "purple" },
+      { label: "Learning Through Play", color: "orange" },
     ],
     strengths: ["Artistic expression", "Fine motor skills", "Empathy"],
     supportNeeds: ["Verbal communication prompts", "Structured choices", "Calm-down strategies"],
@@ -209,6 +214,7 @@ export const students: Record<string, Student> = {
     aetSkills: [
       { label: "Learning Through Play", color: "orange" },
       { label: "Relationships", color: "blue" },
+      { label: "Sensory Processing", color: "red" },
     ],
     strengths: ["Numeracy", "Hands-on learning", "Collaboration"],
     supportNeeds: ["Focus strategies", "Movement breaks", "Task chunking"],
@@ -231,6 +237,7 @@ export const students: Record<string, Student> = {
     aetSkills: [
       { label: "Sensory Processing", color: "red" },
       { label: "Social Awareness", color: "blue" },
+      { label: "Communication", color: "purple" },
     ],
     strengths: ["Observation skills", "Written expression", "Following instructions"],
     supportNeeds: ["Processing time", "Small group settings", "Visual cues"],
