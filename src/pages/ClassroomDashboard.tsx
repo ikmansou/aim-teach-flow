@@ -129,6 +129,7 @@ const ClassroomDashboard = () => {
                     pse: "bg-yusr-amber/10 text-yusr-amber border-yusr-amber/20",
                   };
                   const colorClass = subjectColors[subject.id] || "";
+                  return (
                     <button
                       key={subject.id}
                       onClick={() => subject.active && navigate(`/classroom/${classroom.id}/subject/${subject.id}`)}
