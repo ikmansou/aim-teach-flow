@@ -90,21 +90,102 @@ const LessonDetail = () => {
     <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-primary cursor-pointer transition-colors inline-block ml-1" />
   );
 
-  const handleSendChat = () => {
-    if (!chatInput.trim()) return;
-    const userMsg = chatInput.trim();
-    setChatMessages(prev => [...prev, { role: "user", content: userMsg }]);
-    setChatInput("");
+  const buildLessonContext = useCallback(() => ({
+    lessonTitle: lesson.title,
+    lessonDate: lesson.date,
+    lessonStatus: lesson.status,
+    goals: lesson.goals,
+    activities: lesson.activities,
+    aetTargets,
+    curriculumObjectives: currObjectives,
+    uploadedFiles: uploadedFiles.map(f => f.name),
+    students: classStudents.map(s => ({
+      name: s.name,
+      aetLevel: s.aetLevel,
+      britishCurriculumLevel: s.britishCurriculumLevel,
+      strengths: s.strengths,
+      supportNeeds: s.supportNeeds,
+      aetSkills: s.aetSkills,
+      notes: s.notes,
+    })),
+  }), [lesson, aetTargets, currObjectives, uploadedFiles, classStudents]);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const responses: Record<string, string> = {
-        default: `Based on the AET levels and curriculum progress of your ${classStudents.length} students in ${classroom.name}, here are personalized recommendations for "${lesson.title}":\n\n${classStudents.slice(0, 3).map(s => 
-          `**${s.name}** (${s.aetLevel}):\n- Differentiated worksheet at ${s.britishCurriculumLevel} level\n- Focus on: ${s.supportNeeds[0]}\n- Build on strength: ${s.strengths[0]}`
-        ).join("\n\n")}\n\nWould you like me to generate specific worksheets or activity cards for any student?`,
-      };
-      setChatMessages(prev => [...prev, { role: "ai", content: responses.default }]);
-    }, 1200);
+  const handleSendChat = async () => {
+    if (!chatInput.trim() || isStreaming) return;
+    const userMsg = chatInput.trim();
+    const userMessage = { role: "user" as const, content: userMsg };
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput("");
+    setIsStreaming(true);
+
+    let assistantSoFar = "";
+    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lesson-ai`;
+
+    try {
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: [...chatMessages, userMessage].map(m => ({ role: m.role, content: m.content })),
+          lessonContext: buildLessonContext(),
+        }),
+      });
+
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        throw new Error(errData.error || `Error ${resp.status}`);
+      }
+      if (!resp.body) throw new Error("No response body");
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let streamDone = false;
+
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") { streamDone = true; break; }
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantSoFar += content;
+              const snapshot = assistantSoFar;
+              setChatMessages(prev => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant") {
+                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: snapshot } : m);
+                }
+                return [...prev, { role: "assistant", content: snapshot }];
+              });
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+    } catch (e: any) {
+      console.error("Chat error:", e);
+      toast.error(e.message || "Failed to get AI response");
+      setChatMessages(prev => prev.filter(m => !(m.role === "assistant" && m.content === "")));
+    } finally {
+      setIsStreaming(false);
+    }
   };
 
   return (
