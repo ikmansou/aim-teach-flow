@@ -160,6 +160,12 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 3 Greater Depth",
     britishCurriculumScore: 78,
     notes: "High-functioning. Benefits from challenge activities and leadership roles.",
+    grade: "Year 3",
+    aetSkills: [
+      { label: "Managing Emotions", color: "green" },
+      { label: "Social Awareness", color: "blue" },
+      { label: "Flexibility", color: "orange" },
+    ],
     strengths: ["Advanced reading", "Self-regulation", "Mentoring peers"],
     supportNeeds: ["Social nuance guidance", "Anxiety management"],
   },
