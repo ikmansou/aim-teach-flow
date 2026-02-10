@@ -146,9 +146,9 @@ const StudentProfile = () => {
                   <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-xs px-3 py-0.5 shadow-md`}>
                     AET: {student.aetLevel}
                   </Badge>
-                  {student.aetSkills.map((skill, idx) => (
-                    <Badge key={idx} className={`${aetSkillColors[skill.color]} text-[10px] px-2 py-0.5 border font-medium`}>
-                      {skill.label}
+                  {aetDetails.categories.map((cat) => (
+                    <Badge key={cat.id} className={`${aetSkillColors[cat.color] || aetSkillColors.blue} text-[10px] px-2 py-0.5 border font-medium`}>
+                      {cat.name}
                     </Badge>
                   ))}
                 </div>
