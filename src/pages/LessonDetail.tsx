@@ -50,6 +50,7 @@ const LessonDetail = () => {
 
   const classroom = classrooms.find(c => c.id === classroomId);
   const lesson = lessons.find(l => l.id === lessonId);
+  const classStudents = classroom ? getClassroomStudents(classroom.id) : [];
 
   const [aetTargets, setAetTargets] = useState<string[]>(() => lesson?.aetTargets || []);
   const [currObjectives, setCurrObjectives] = useState<string[]>(() => lesson?.curriculumObjectives || []);
@@ -59,6 +60,26 @@ const LessonDetail = () => {
   const [newCurr, setNewCurr] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: number; type: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const buildLessonContext = useCallback(() => ({
+    lessonTitle: lesson?.title || "",
+    lessonDate: lesson?.date || "",
+    lessonStatus: lesson?.status || "",
+    goals: lesson?.goals || [],
+    activities: lesson?.activities || [],
+    aetTargets,
+    curriculumObjectives: currObjectives,
+    uploadedFiles: uploadedFiles.map(f => f.name),
+    students: classStudents.map(s => ({
+      name: s.name,
+      aetLevel: s.aetLevel,
+      britishCurriculumLevel: s.britishCurriculumLevel,
+      strengths: s.strengths,
+      supportNeeds: s.supportNeeds,
+      aetSkills: s.aetSkills,
+      notes: s.notes,
+    })),
+  }), [lesson, aetTargets, currObjectives, uploadedFiles, classStudents]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -84,13 +105,11 @@ const LessonDetail = () => {
 
   if (!classroom || !lesson) return <div className="p-8">Lesson not found.</div>;
 
-  const classStudents = getClassroomStudents(classroom.id);
-
   const EditIcon = () => (
     <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-primary cursor-pointer transition-colors inline-block ml-1" />
   );
 
-  const buildLessonContext = useCallback(() => ({
+  const handleSendChat = async () => {
     lessonTitle: lesson.title,
     lessonDate: lesson.date,
     lessonStatus: lesson.status,
