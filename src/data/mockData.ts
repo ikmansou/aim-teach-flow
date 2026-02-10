@@ -162,7 +162,7 @@ export const students: Record<string, Student> = {
     id: "s7",
     name: "Rashid Al-Blooshi",
     age: 9,
-    photo: "",
+    photo: "rashid",
     gender: "male",
     dateOfBirth: "2017-06-08",
     guardianName: "Khaled Al-Blooshi",
