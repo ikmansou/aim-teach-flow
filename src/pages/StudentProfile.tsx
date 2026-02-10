@@ -1,13 +1,18 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { PageHeader } from "@/components/PageHeader";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { students, classrooms, getAetBgClass } from "@/data/mockData";
-import { Calendar, Phone, User2, Brain, BookOpen, Heart, Shield, Sparkles, ArrowLeft } from "lucide-react";
+import { getStudentAetDetails } from "@/data/aetDetails";
+import type { StudentAetDetail } from "@/data/aetDetails";
+import AetDetailTable from "@/components/AetDetailTable";
+import { Calendar, Phone, User2, BookOpen, Shield, Sparkles, ArrowLeft, Pencil, Check, X } from "lucide-react";
 
-// Student photo imports
 import omarPhoto from "@/assets/students/omar.png";
 import laylaPhoto from "@/assets/students/layla.png";
 import khalidPhoto from "@/assets/students/khalid.png";
@@ -37,20 +42,62 @@ const classroomGradients: Record<string, string> = {
   c4: "from-indigo-400 via-purple-400 to-pink-400",
 };
 
+// Editable text field component
+const EditableField = ({ value, onSave, label, type = "text" }: {
+  value: string;
+  onSave: (v: string) => void;
+  label: string;
+  type?: "text" | "textarea";
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+
+  if (!editing) {
+    return (
+      <div className="group flex items-start gap-1 cursor-pointer" onClick={() => { setDraft(value); setEditing(true); }}>
+        <span className="flex-1">{value}</span>
+        <Pencil className="h-3 w-3 text-muted-foreground/0 group-hover:text-muted-foreground transition-colors shrink-0 mt-0.5" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-start gap-1">
+      {type === "textarea" ? (
+        <Textarea value={draft} onChange={(e) => setDraft(e.target.value)} className="text-sm min-h-[60px]" autoFocus />
+      ) : (
+        <Input value={draft} onChange={(e) => setDraft(e.target.value)} className="text-sm h-8" autoFocus />
+      )}
+      <button onClick={() => { onSave(draft); setEditing(false); }} className="text-emerald-600 hover:text-emerald-700 p-1"><Check className="h-3.5 w-3.5" /></button>
+      <button onClick={() => setEditing(false)} className="text-muted-foreground hover:text-destructive p-1"><X className="h-3.5 w-3.5" /></button>
+    </div>
+  );
+};
+
 const StudentProfile = () => {
   const { classroomId, studentId } = useParams();
   const navigate = useNavigate();
-  const student = studentId ? students[studentId] : null;
+  const studentData = studentId ? students[studentId] : null;
   const classroom = classrooms.find(c => c.id === classroomId);
+
+  // Local editable state
+  const [student, setStudent] = useState(() => studentData ? { ...studentData } : null);
+  const [aetDetails, setAetDetails] = useState<StudentAetDetail>(() =>
+    getStudentAetDetails(studentId || "s1")
+  );
 
   if (!student || !classroom) return <div className="p-8">Student not found.</div>;
 
   const gradient = classroomGradients[classroom.id] || classroomGradients.c1;
 
+  const updateField = (field: string, value: string) => {
+    setStudent((prev) => prev ? { ...prev, [field]: value } : prev);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <PageHeader />
-      <main className="container py-8 max-w-4xl">
+      <main className="container py-8 max-w-5xl">
         <Breadcrumbs
           items={[
             { label: "Classrooms", href: "/classrooms" },
@@ -70,68 +117,36 @@ const StudentProfile = () => {
             </button>
 
             <div className="flex flex-col sm:flex-row items-center gap-6 pt-4">
-              {/* Photo */}
               <div className="w-28 h-28 rounded-2xl overflow-hidden ring-4 ring-white/30 shadow-xl shrink-0">
-                <img
-                  src={studentPhotos[student.photo] || ""}
-                  alt={student.name}
-                  className="w-full h-full object-cover"
-                />
+                <img src={studentPhotos[student.photo] || ""} alt={student.name} className="w-full h-full object-cover" />
               </div>
-
-              {/* Info */}
               <div className="flex-1 text-center sm:text-left">
                 <h1 className="font-display text-2xl md:text-3xl font-extrabold text-white drop-shadow-lg">
                   {student.name}
                 </h1>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-2 text-white/80 text-sm">
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5" /> Age {student.age}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <User2 className="h-3.5 w-3.5" /> {student.grade}
-                  </span>
+                  <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Age {student.age}</span>
+                  <span className="flex items-center gap-1.5"><User2 className="h-3.5 w-3.5" /> {student.grade}</span>
                 </div>
-                <div className="mt-3">
+                <div className="mt-3 flex flex-wrap gap-1.5">
                   <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-xs px-3 py-0.5 shadow-md`}>
                     AET: {student.aetLevel}
                   </Badge>
+                  {student.aetSkills.map((skill, idx) => (
+                    <Badge key={idx} className={`${aetSkillColors[skill.color]} text-[10px] px-2 py-0.5 border font-medium`}>
+                      {skill.label}
+                    </Badge>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* AET Skills — Full Width */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
-          <Card className="mb-6 border-border/60">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Brain className="h-4 w-4 text-primary" /> AET Skills
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {student.aetSkills.map((skill, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 + idx * 0.04 }}
-                  >
-                    <Badge className={`${aetSkillColors[skill.color]} text-xs px-3 py-1.5 font-semibold border rounded-xl`}>
-                      {skill.label}
-                    </Badge>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* Info Cards */}
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
           {/* Personal Info */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
             <Card className="border-border/60 h-full">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -139,19 +154,17 @@ const StudentProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Guardian</span>
-                  <span className="font-medium">{student.guardianName}</span>
+                <div className="flex justify-between items-start">
+                  <span className="text-muted-foreground shrink-0 mr-4">Guardian</span>
+                  <EditableField value={student.guardianName} onSave={(v) => updateField("guardianName", v)} label="Guardian" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Contact</span>
-                  <span className="font-medium flex items-center gap-1">
-                    <Phone className="h-3 w-3" />{student.guardianContact}
-                  </span>
+                <div className="flex justify-between items-start">
+                  <span className="text-muted-foreground shrink-0 mr-4 flex items-center gap-1"><Phone className="h-3 w-3" />Contact</span>
+                  <EditableField value={student.guardianContact} onSave={(v) => updateField("guardianContact", v)} label="Contact" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date of Birth</span>
-                  <span className="font-medium">{student.dateOfBirth}</span>
+                <div className="flex justify-between items-start">
+                  <span className="text-muted-foreground shrink-0 mr-4">DOB</span>
+                  <EditableField value={student.dateOfBirth} onSave={(v) => updateField("dateOfBirth", v)} label="DOB" />
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Gender</span>
@@ -162,7 +175,7 @@ const StudentProfile = () => {
           </motion.div>
 
           {/* Notes */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
             <Card className="border-border/60 h-full">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -170,13 +183,13 @@ const StudentProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-foreground leading-relaxed">{student.notes}</p>
+                <EditableField value={student.notes} onSave={(v) => updateField("notes", v)} label="Notes" type="textarea" />
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Strengths */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}>
             <Card className="border-border/60 h-full">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -196,7 +209,7 @@ const StudentProfile = () => {
           </motion.div>
 
           {/* Support Needs */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <Card className="border-border/60 h-full">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
@@ -215,6 +228,11 @@ const StudentProfile = () => {
             </Card>
           </motion.div>
         </div>
+
+        {/* AET Detail Table */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
+          <AetDetailTable aetDetails={aetDetails} onUpdate={setAetDetails} />
+        </motion.div>
       </main>
     </div>
   );
