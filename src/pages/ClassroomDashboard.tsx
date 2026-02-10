@@ -120,8 +120,15 @@ const ClassroomDashboard = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 {subjects.map(subject => {
+                  const subjectColors: Record<string, string> = {
+                    english: "bg-yusr-sky/10 text-yusr-sky border-yusr-sky/20",
+                    maths: "bg-yusr-indigo/10 text-yusr-indigo border-yusr-indigo/20",
+                    science: "bg-yusr-emerald/10 text-yusr-emerald border-yusr-emerald/20",
+                    art: "bg-yusr-purple/10 text-yusr-purple border-yusr-purple/20",
+                    pe: "bg-yusr-coral/10 text-yusr-coral border-yusr-coral/20",
+                    pse: "bg-yusr-amber/10 text-yusr-amber border-yusr-amber/20",
+                  };
                   const colorClass = subjectColors[subject.id] || "";
-                  return (
                     <button
                       key={subject.id}
                       onClick={() => subject.active && navigate(`/classroom/${classroom.id}/subject/${subject.id}`)}
