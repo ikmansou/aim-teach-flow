@@ -527,6 +527,7 @@ const LessonDetail = () => {
           </AnimatePresence>
         </>
       </>
+    </div>
   );
 };
 
