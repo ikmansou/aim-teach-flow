@@ -110,26 +110,6 @@ const LessonDetail = () => {
   );
 
   const handleSendChat = async () => {
-    lessonTitle: lesson.title,
-    lessonDate: lesson.date,
-    lessonStatus: lesson.status,
-    goals: lesson.goals,
-    activities: lesson.activities,
-    aetTargets,
-    curriculumObjectives: currObjectives,
-    uploadedFiles: uploadedFiles.map(f => f.name),
-    students: classStudents.map(s => ({
-      name: s.name,
-      aetLevel: s.aetLevel,
-      britishCurriculumLevel: s.britishCurriculumLevel,
-      strengths: s.strengths,
-      supportNeeds: s.supportNeeds,
-      aetSkills: s.aetSkills,
-      notes: s.notes,
-    })),
-  }), [lesson, aetTargets, currObjectives, uploadedFiles, classStudents]);
-
-  const handleSendChat = async () => {
     if (!chatInput.trim() || isStreaming) return;
     const userMsg = chatInput.trim();
     const userMessage = { role: "user" as const, content: userMsg };
