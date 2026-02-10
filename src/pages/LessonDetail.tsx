@@ -461,9 +461,7 @@ const LessonDetail = () => {
       </main>
 
       {/* AI Pedagogical Partner FAB */}
-      {(
-        <>
-        <>
+      <>
           <motion.button
             className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 transition-transform z-50"
             whileHover={{ scale: 1.1 }}
