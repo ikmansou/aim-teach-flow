@@ -180,20 +180,18 @@ const ClassroomDashboard = () => {
                         />
                       </div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex-1 min-w-0 space-y-2">
                         <div>
                           <p className="font-display font-bold text-foreground text-sm truncate">{student.name}</p>
-                          <p className="text-[11px] text-muted-foreground">Age {student.age} · {student.gender === "male" ? "♂" : "♀"}</p>
+                          <p className="text-[11px] text-muted-foreground">Age {student.age} · {student.grade}</p>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-[10px] px-2 py-0 h-5`}>
-                            {student.aetLevel}
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 font-medium border-border text-muted-foreground">
-                            {student.britishCurriculumLevel}
-                          </Badge>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {student.aetSkills.map((skill, idx) => (
+                            <Badge key={idx} className={`${aetSkillColors[skill.color]} text-[9px] px-1.5 py-0 h-[18px] font-medium border`}>
+                              {skill.label}
+                            </Badge>
+                          ))}
                         </div>
                       </div>
                     </div>
