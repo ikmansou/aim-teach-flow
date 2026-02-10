@@ -10,7 +10,7 @@ import {
   getClassroomStudents,
   getAetBgClass,
 } from "@/data/mockData";
-import { BookOpen, Calculator, FlaskConical, Palette, Dumbbell, Heart, Lock, Users } from "lucide-react";
+import { BookOpen, Calculator, FlaskConical, Palette, Dumbbell, Heart, Lock, Users, Sun, Waves, Palmtree, Bird } from "lucide-react";
 
 // Student photo imports
 import omarPhoto from "@/assets/students/omar.png";
@@ -21,7 +21,6 @@ import yusufPhoto from "@/assets/students/yusuf.png";
 import saraPhoto from "@/assets/students/sara.png";
 import rashidPhoto from "@/assets/students/rashid.png";
 import nouraPhoto from "@/assets/students/noura.png";
-import classroomIllustration from "@/assets/classroom-illustration.png";
 
 const studentPhotos: Record<string, string> = {
   omar: omarPhoto,
@@ -32,6 +31,29 @@ const studentPhotos: Record<string, string> = {
   sara: saraPhoto,
   rashid: rashidPhoto,
   noura: nouraPhoto,
+};
+
+const classroomThemes: Record<string, { icon: React.ReactNode; gradient: string; iconBg: string }> = {
+  c1: {
+    icon: <Sun className="h-8 w-8" />,
+    gradient: "from-amber-400 via-orange-400 to-rose-400",
+    iconBg: "bg-amber-100 text-amber-600",
+  },
+  c2: {
+    icon: <Waves className="h-8 w-8" />,
+    gradient: "from-cyan-400 via-teal-400 to-emerald-400",
+    iconBg: "bg-teal-100 text-teal-600",
+  },
+  c3: {
+    icon: <Palmtree className="h-8 w-8" />,
+    gradient: "from-emerald-400 via-green-400 to-lime-400",
+    iconBg: "bg-green-100 text-green-600",
+  },
+  c4: {
+    icon: <Bird className="h-8 w-8" />,
+    gradient: "from-indigo-400 via-purple-400 to-pink-400",
+    iconBg: "bg-indigo-100 text-indigo-600",
+  },
 };
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -60,6 +82,7 @@ const ClassroomDashboard = () => {
   if (!classroom) return <div className="p-8">Classroom not found.</div>;
 
   const classStudents = getClassroomStudents(classroom.id);
+  const theme = classroomThemes[classroom.id] || classroomThemes.c1;
 
   return (
     <div className="min-h-screen bg-background">
@@ -72,24 +95,19 @@ const ClassroomDashboard = () => {
           ]}
         />
 
-        {/* Classroom Illustration Banner */}
+        {/* Classroom Banner — matches /classrooms card style */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="relative rounded-2xl overflow-hidden h-44 md:h-52">
-            <img
-              src={classroomIllustration}
-              alt="Classroom illustration"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 to-transparent" />
-            <div className="absolute inset-0 flex items-center px-8">
-              <div>
-                <h1 className="font-display text-3xl md:text-4xl font-extrabold text-white drop-shadow-lg">
-                  {classroom.name}
-                </h1>
-                <p className="text-white/80 mt-1 text-sm font-medium">
-                  {classroom.year} · {classStudents.length} students
-                </p>
-              </div>
+          <div className={`relative rounded-2xl overflow-hidden h-28 bg-gradient-to-br ${theme.gradient} flex items-center px-8 gap-5`}>
+            <div className={`w-14 h-14 rounded-2xl ${theme.iconBg} flex items-center justify-center shadow-lg shrink-0`}>
+              {theme.icon}
+            </div>
+            <div>
+              <h1 className="font-display text-2xl md:text-3xl font-extrabold text-white drop-shadow-lg">
+                {classroom.name}
+              </h1>
+              <p className="text-white/80 mt-0.5 text-sm font-medium">
+                {classroom.year} · {classStudents.length} students
+              </p>
             </div>
           </div>
         </motion.div>
@@ -143,7 +161,6 @@ const ClassroomDashboard = () => {
                     className="cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
                     onClick={() => navigate(`/classroom/${classroom.id}/student/${student.id}`)}
                   >
-                    {/* Photo area */}
                     <div className="flex justify-center pt-5 pb-3">
                       <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-muted shadow-md">
                         <img
@@ -153,20 +170,16 @@ const ClassroomDashboard = () => {
                         />
                       </div>
                     </div>
-
-                    {/* Info area */}
                     <CardContent className="text-center pb-5 px-4 pt-0 space-y-3">
                       <div>
                         <p className="font-display font-bold text-foreground text-sm">{student.name}</p>
                         <p className="text-xs text-muted-foreground">Age {student.age}</p>
                       </div>
-
                       <div className="flex items-center justify-center gap-2">
                         <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-[10px] px-2.5 py-0.5`}>
                           {student.aetLevel}
                         </Badge>
                       </div>
-
                       <div className="bg-muted/50 rounded-lg px-3 py-1.5">
                         <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Curriculum</p>
                         <p className="text-xs font-semibold text-foreground">{student.britishCurriculumLevel}</p>
