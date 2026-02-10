@@ -172,14 +172,42 @@ const LessonDetail = () => {
             {/* Resources */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-yusr-amber" /> Resources <EditIcon /></CardTitle>
+                <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4 text-yusr-amber" /> Resources</CardTitle>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {lesson.resources.map((r, i) => (
-                    <li key={i} className="text-sm text-muted-foreground">{r}</li>
-                  ))}
-                </ul>
+              <CardContent className="space-y-3">
+                {uploadedFiles.length > 0 && (
+                  <div className="space-y-2">
+                    {uploadedFiles.map((f, i) => (
+                      <div key={i} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/50 group">
+                        {getFileIcon(f.type)}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{f.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{formatSize(f.size)}</p>
+                        </div>
+                        <button
+                          onClick={() => setUploadedFiles(prev => prev.filter((_, j) => j !== i))}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/40 hover:bg-primary/5 transition-colors cursor-pointer"
+                >
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Click to upload files</span>
+                </button>
               </CardContent>
             </Card>
 
