@@ -72,6 +72,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 3 Working Towards",
     britishCurriculumScore: 38,
     notes: "Responds well to visual schedules. Prefers quiet reading corner for independent work.",
+    grade: "Year 3",
+    aetSkills: [
+      { label: "Managing Emotions", color: "green" },
+      { label: "Relationships", color: "blue" },
+    ],
     strengths: ["Visual learning", "Pattern recognition", "Reading comprehension"],
     supportNeeds: ["Social interaction prompts", "Transition support", "Sensory breaks"],
   },
