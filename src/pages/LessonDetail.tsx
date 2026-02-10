@@ -29,7 +29,10 @@ import {
   X,
   Send,
   Sparkles,
+  Plus,
+  Trash2,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 const LessonDetail = () => {
   const { classroomId, subjectId, lessonId } = useParams();
