@@ -138,6 +138,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 3 Working Towards",
     britishCurriculumScore: 35,
     notes: "Uses AAC device for communication. Excellent with technology-based learning.",
+    grade: "Year 3",
+    aetSkills: [
+      { label: "Communication", color: "purple" },
+      { label: "Sensory Processing", color: "red" },
+    ],
     strengths: ["Technology skills", "Visual processing", "Determination"],
     supportNeeds: ["AAC support", "Extended processing time", "Modified worksheets"],
   },
