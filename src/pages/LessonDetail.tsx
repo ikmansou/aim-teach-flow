@@ -163,17 +163,112 @@ const LessonDetail = () => {
                 <div>
                   <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Brain className="h-3 w-3" /> AET Targets</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {lesson.aetTargets.map(t => (
-                      <Badge key={t} className="bg-yusr-indigo/15 text-yusr-indigo border-0 text-[10px]">{t}</Badge>
+                    {aetTargets.map((t, i) => (
+                      editingAetIdx === i ? (
+                        <div key={i} className="flex items-center gap-1">
+                          <Input
+                            defaultValue={t}
+                            className="h-6 text-[10px] w-48"
+                            autoFocus
+                            onBlur={(e) => {
+                              const val = e.target.value.trim();
+                              if (val) { setAetTargets(prev => prev.map((x, j) => j === i ? val : x)); }
+                              setEditingAetIdx(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") { (e.target as HTMLInputElement).blur(); }
+                              if (e.key === "Escape") { setEditingAetIdx(null); }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <Badge
+                          key={i}
+                          className="bg-yusr-indigo/15 text-yusr-indigo border-0 text-[10px] cursor-pointer group gap-1"
+                          onClick={() => setEditingAetIdx(i)}
+                        >
+                          {t}
+                          <Trash2
+                            className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 text-destructive transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); setAetTargets(prev => prev.filter((_, j) => j !== i)); }}
+                          />
+                        </Badge>
+                      )
                     ))}
+                    {newAet !== "" ? (
+                      <Input
+                        value={newAet}
+                        onChange={(e) => setNewAet(e.target.value)}
+                        className="h-6 text-[10px] w-48"
+                        autoFocus
+                        placeholder="New AET target..."
+                        onBlur={() => { if (newAet.trim()) { setAetTargets(prev => [...prev, newAet.trim()]); } setNewAet(""); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newAet.trim()) { setAetTargets(prev => [...prev, newAet.trim()]); setNewAet(""); }
+                          if (e.key === "Escape") { setNewAet(""); }
+                        }}
+                      />
+                    ) : (
+                      <button onClick={() => setNewAet(" ")} className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary transition-colors px-2 py-0.5 rounded-full border border-dashed border-border">
+                        <Plus className="h-2.5 w-2.5" /> Add
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><BookOpen className="h-3 w-3" /> British Curriculum</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {lesson.curriculumObjectives.map(o => (
-                      <Badge key={o} variant="outline" className="text-[10px]">{o}</Badge>
+                    {currObjectives.map((o, i) => (
+                      editingCurrIdx === i ? (
+                        <div key={i} className="flex items-center gap-1">
+                          <Input
+                            defaultValue={o}
+                            className="h-6 text-[10px] w-48"
+                            autoFocus
+                            onBlur={(e) => {
+                              const val = e.target.value.trim();
+                              if (val) { setCurrObjectives(prev => prev.map((x, j) => j === i ? val : x)); }
+                              setEditingCurrIdx(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") { (e.target as HTMLInputElement).blur(); }
+                              if (e.key === "Escape") { setEditingCurrIdx(null); }
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <Badge
+                          key={i}
+                          variant="outline"
+                          className="text-[10px] cursor-pointer group gap-1"
+                          onClick={() => setEditingCurrIdx(i)}
+                        >
+                          {o}
+                          <Trash2
+                            className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 text-destructive transition-opacity"
+                            onClick={(e) => { e.stopPropagation(); setCurrObjectives(prev => prev.filter((_, j) => j !== i)); }}
+                          />
+                        </Badge>
+                      )
                     ))}
+                    {newCurr !== "" ? (
+                      <Input
+                        value={newCurr}
+                        onChange={(e) => setNewCurr(e.target.value)}
+                        className="h-6 text-[10px] w-48"
+                        autoFocus
+                        placeholder="New objective..."
+                        onBlur={() => { if (newCurr.trim()) { setCurrObjectives(prev => [...prev, newCurr.trim()]); } setNewCurr(""); }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && newCurr.trim()) { setCurrObjectives(prev => [...prev, newCurr.trim()]); setNewCurr(""); }
+                          if (e.key === "Escape") { setNewCurr(""); }
+                        }}
+                      />
+                    ) : (
+                      <button onClick={() => setNewCurr(" ")} className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-primary transition-colors px-2 py-0.5 rounded-full border border-dashed border-border">
+                        <Plus className="h-2.5 w-2.5" /> Add
+                      </button>
+                    )}
                   </div>
                 </div>
               </CardContent>
