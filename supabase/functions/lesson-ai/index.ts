@@ -1,0 +1,116 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { messages, lessonContext } = await req.json();
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const systemPrompt = `You are an expert SEN (Special Educational Needs) pedagogical partner for teachers in UAE schools following the British Curriculum and the AET (Autism Education Trust) framework.
+
+You help teachers generate personalized, differentiated resources for their students based on:
+- Each student's AET level and skills
+- Their British Curriculum level
+- Their individual strengths and support needs
+- The lesson's goals, activities, AET targets, and curriculum objectives
+- Any resources the teacher has uploaded
+
+Here is the current lesson context:
+
+**Lesson:** ${lessonContext.lessonTitle}
+**Date:** ${lessonContext.lessonDate}
+**Status:** ${lessonContext.lessonStatus}
+
+**Goals:**
+${lessonContext.goals.map((g: string, i: number) => `${i + 1}. ${g}`).join("\n")}
+
+**Activities:**
+${lessonContext.activities.map((a: string) => `- ${a}`).join("\n")}
+
+**AET Targets:**
+${lessonContext.aetTargets.map((t: string) => `- ${t}`).join("\n")}
+
+**British Curriculum Objectives:**
+${lessonContext.curriculumObjectives.map((o: string) => `- ${o}`).join("\n")}
+
+**Uploaded Resources:**
+${lessonContext.uploadedFiles.length > 0 ? lessonContext.uploadedFiles.map((f: string) => `- ${f}`).join("\n") : "None uploaded yet."}
+
+**Students in this class:**
+${lessonContext.students.map((s: { name: string; aetLevel: string; britishCurriculumLevel: string; strengths: string[]; supportNeeds: string[]; aetSkills: { label: string }[]; notes: string }) =>
+  `- **${s.name}** | AET: ${s.aetLevel} | Curriculum: ${s.britishCurriculumLevel}
+    Strengths: ${s.strengths.join(", ")}
+    Support needs: ${s.supportNeeds.join(", ")}
+    AET Skills: ${s.aetSkills.map(sk => sk.label).join(", ")}
+    Notes: ${s.notes}`
+).join("\n\n")}
+
+When generating resources:
+1. Always differentiate by student AET level and curriculum level
+2. Reference specific students by name with tailored suggestions
+3. Align resources with the lesson's AET targets and curriculum objectives
+4. Suggest modifications to uploaded resources where relevant
+5. Use clear formatting with headers and bullet points
+6. Be practical and classroom-ready`;
+
+    const response = await fetch(
+      "https://ai.gateway.lovable.dev/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { role: "system", content: systemPrompt },
+            ...messages,
+          ],
+          stream: true,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted. Please add credits in Settings." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const t = await response.text();
+      console.error("AI gateway error:", response.status, t);
+      return new Response(
+        JSON.stringify({ error: "AI service error" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(response.body, {
+      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    });
+  } catch (e) {
+    console.error("lesson-ai error:", e);
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
