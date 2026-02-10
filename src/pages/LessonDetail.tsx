@@ -31,6 +31,11 @@ import {
   Sparkles,
   Plus,
   Trash2,
+  Upload,
+  File,
+  Image,
+  FileSpreadsheet,
+  FileVideo,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
