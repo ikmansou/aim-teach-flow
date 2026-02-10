@@ -205,6 +205,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 3 Expected",
     britishCurriculumScore: 58,
     notes: "Enthusiastic learner. Benefits from movement breaks between tasks.",
+    grade: "Year 3",
+    aetSkills: [
+      { label: "Learning Through Play", color: "orange" },
+      { label: "Relationships", color: "blue" },
+    ],
     strengths: ["Numeracy", "Hands-on learning", "Collaboration"],
     supportNeeds: ["Focus strategies", "Movement breaks", "Task chunking"],
   },
