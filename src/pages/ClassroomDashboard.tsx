@@ -65,13 +65,12 @@ const iconMap: Record<string, React.ReactNode> = {
   Heart: <Heart className="h-5 w-5" />,
 };
 
-const subjectColors: Record<string, string> = {
-  english: "bg-yusr-sky/10 text-yusr-sky border-yusr-sky/20",
-  maths: "bg-yusr-indigo/10 text-yusr-indigo border-yusr-indigo/20",
-  science: "bg-yusr-emerald/10 text-yusr-emerald border-yusr-emerald/20",
-  art: "bg-yusr-purple/10 text-yusr-purple border-yusr-purple/20",
-  pe: "bg-yusr-coral/10 text-yusr-coral border-yusr-coral/20",
-  pse: "bg-yusr-amber/10 text-yusr-amber border-yusr-amber/20",
+const aetSkillColors: Record<string, string> = {
+  green: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  orange: "bg-amber-100 text-amber-700 border-amber-200",
+  blue: "bg-sky-100 text-sky-700 border-sky-200",
+  purple: "bg-purple-100 text-purple-700 border-purple-200",
+  red: "bg-rose-100 text-rose-700 border-rose-200",
 };
 
 const ClassroomDashboard = () => {
@@ -121,6 +120,14 @@ const ClassroomDashboard = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 {subjects.map(subject => {
+                  const subjectColors: Record<string, string> = {
+                    english: "bg-yusr-sky/10 text-yusr-sky border-yusr-sky/20",
+                    maths: "bg-yusr-indigo/10 text-yusr-indigo border-yusr-indigo/20",
+                    science: "bg-yusr-emerald/10 text-yusr-emerald border-yusr-emerald/20",
+                    art: "bg-yusr-purple/10 text-yusr-purple border-yusr-purple/20",
+                    pe: "bg-yusr-coral/10 text-yusr-coral border-yusr-coral/20",
+                    pse: "bg-yusr-amber/10 text-yusr-amber border-yusr-amber/20",
+                  };
                   const colorClass = subjectColors[subject.id] || "";
                   return (
                     <button
@@ -174,20 +181,18 @@ const ClassroomDashboard = () => {
                         />
                       </div>
 
-                      {/* Info */}
-                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex-1 min-w-0 space-y-2">
                         <div>
                           <p className="font-display font-bold text-foreground text-sm truncate">{student.name}</p>
-                          <p className="text-[11px] text-muted-foreground">Age {student.age} · {student.gender === "male" ? "♂" : "♀"}</p>
+                          <p className="text-[11px] text-muted-foreground">Age {student.age} · {student.grade}</p>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-[10px] px-2 py-0 h-5`}>
-                            {student.aetLevel}
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 font-medium border-border text-muted-foreground">
-                            {student.britishCurriculumLevel}
-                          </Badge>
+                        <div className="flex flex-wrap items-center gap-1">
+                          {student.aetSkills.map((skill, idx) => (
+                            <Badge key={idx} className={`${aetSkillColors[skill.color]} text-[9px] px-1.5 py-0 h-[18px] font-medium border`}>
+                              {skill.label}
+                            </Badge>
+                          ))}
                         </div>
                       </div>
                     </div>

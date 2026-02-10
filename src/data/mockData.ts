@@ -12,6 +12,8 @@ export interface Student {
   britishCurriculumLevel: string;
   britishCurriculumScore: number;
   notes: string;
+  grade: string;
+  aetSkills: { label: string; color: "green" | "orange" | "blue" | "purple" | "red" }[];
   strengths: string[];
   supportNeeds: string[];
 }
@@ -70,6 +72,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 3 Working Towards",
     britishCurriculumScore: 38,
     notes: "Responds well to visual schedules. Prefers quiet reading corner for independent work.",
+    grade: "Year 3",
+    aetSkills: [
+      { label: "Managing Emotions", color: "green" },
+      { label: "Relationships", color: "blue" },
+    ],
     strengths: ["Visual learning", "Pattern recognition", "Reading comprehension"],
     supportNeeds: ["Social interaction prompts", "Transition support", "Sensory breaks"],
   },
@@ -87,6 +94,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 2 Expected",
     britishCurriculumScore: 52,
     notes: "Benefits from one-to-one instruction. Strong interest in storytelling.",
+    grade: "Year 2",
+    aetSkills: [
+      { label: "Learning Through Play", color: "orange" },
+      { label: "Communication", color: "purple" },
+    ],
     strengths: ["Creative expression", "Verbal storytelling", "Memory recall"],
     supportNeeds: ["Group work facilitation", "Emotional regulation support", "Clear instructions"],
   },
@@ -104,6 +116,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 4 Expected",
     britishCurriculumScore: 65,
     notes: "Making strong progress. Enjoys collaborative learning with structured roles.",
+    grade: "Year 4",
+    aetSkills: [
+      { label: "Relationships", color: "blue" },
+      { label: "Flexibility", color: "orange" },
+    ],
     strengths: ["Logical thinking", "Following routines", "Written expression"],
     supportNeeds: ["Flexibility in tasks", "Peer interaction coaching"],
   },
@@ -121,6 +138,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 3 Working Towards",
     britishCurriculumScore: 35,
     notes: "Uses AAC device for communication. Excellent with technology-based learning.",
+    grade: "Year 3",
+    aetSkills: [
+      { label: "Communication", color: "purple" },
+      { label: "Sensory Processing", color: "red" },
+    ],
     strengths: ["Technology skills", "Visual processing", "Determination"],
     supportNeeds: ["AAC support", "Extended processing time", "Modified worksheets"],
   },
@@ -138,6 +160,12 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 3 Greater Depth",
     britishCurriculumScore: 78,
     notes: "High-functioning. Benefits from challenge activities and leadership roles.",
+    grade: "Year 3",
+    aetSkills: [
+      { label: "Managing Emotions", color: "green" },
+      { label: "Social Awareness", color: "blue" },
+      { label: "Flexibility", color: "orange" },
+    ],
     strengths: ["Advanced reading", "Self-regulation", "Mentoring peers"],
     supportNeeds: ["Social nuance guidance", "Anxiety management"],
   },
@@ -155,6 +183,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 4 Working Towards",
     britishCurriculumScore: 40,
     notes: "Enjoys art-based activities. Responds well to positive reinforcement.",
+    grade: "Year 4",
+    aetSkills: [
+      { label: "Managing Emotions", color: "green" },
+      { label: "Communication", color: "purple" },
+    ],
     strengths: ["Artistic expression", "Fine motor skills", "Empathy"],
     supportNeeds: ["Verbal communication prompts", "Structured choices", "Calm-down strategies"],
   },
@@ -172,6 +205,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 3 Expected",
     britishCurriculumScore: 58,
     notes: "Enthusiastic learner. Benefits from movement breaks between tasks.",
+    grade: "Year 3",
+    aetSkills: [
+      { label: "Learning Through Play", color: "orange" },
+      { label: "Relationships", color: "blue" },
+    ],
     strengths: ["Numeracy", "Hands-on learning", "Collaboration"],
     supportNeeds: ["Focus strategies", "Movement breaks", "Task chunking"],
   },
@@ -189,6 +227,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 2 Greater Depth",
     britishCurriculumScore: 48,
     notes: "Quiet but observant. Excels when given time to process before responding.",
+    grade: "KG 2",
+    aetSkills: [
+      { label: "Sensory Processing", color: "red" },
+      { label: "Social Awareness", color: "blue" },
+    ],
     strengths: ["Observation skills", "Written expression", "Following instructions"],
     supportNeeds: ["Processing time", "Small group settings", "Visual cues"],
   },
