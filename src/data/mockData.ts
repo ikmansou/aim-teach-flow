@@ -12,6 +12,8 @@ export interface Student {
   britishCurriculumLevel: string;
   britishCurriculumScore: number;
   notes: string;
+  grade: string;
+  aetSkills: { label: string; color: "green" | "orange" | "blue" | "purple" | "red" }[];
   strengths: string[];
   supportNeeds: string[];
 }
