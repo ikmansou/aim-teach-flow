@@ -127,7 +127,20 @@ const StudentProfile = () => {
                 </h1>
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-2 text-white/80 text-sm">
                   <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Age {student.age}</span>
-                  <span className="flex items-center gap-1.5"><User2 className="h-3.5 w-3.5" /> {student.grade}</span>
+                  <span className="flex items-center gap-1.5">
+                    <GraduationCap className="h-3.5 w-3.5" />
+                    <Select value={student.grade} onValueChange={(v) => updateField("grade", v)}>
+                      <SelectTrigger className="h-auto border-none bg-white/20 hover:bg-white/30 text-white text-sm px-2 py-0.5 rounded-lg w-auto gap-1 [&>svg]:text-white/70">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["KG 1", "KG 2", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5", "Year 6"].map(g => (
+                          <SelectItem key={g} value={g}>{g}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </span>
+                  <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" /> {classroom.year}</span>
                   <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" /> {classroom.year}</span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-1.5">
