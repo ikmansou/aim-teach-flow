@@ -174,6 +174,7 @@ export const students: Record<string, Student> = {
       { label: "Managing Emotions", color: "green" },
       { label: "Social Awareness", color: "blue" },
       { label: "Flexibility", color: "orange" },
+      { label: "Sensory Processing", color: "red" },
     ],
     strengths: ["Advanced reading", "Self-regulation", "Mentoring peers"],
     supportNeeds: ["Social nuance guidance", "Anxiety management"],
