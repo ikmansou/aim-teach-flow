@@ -43,6 +43,13 @@ const LessonDetail = () => {
   const classroom = classrooms.find(c => c.id === classroomId);
   const lesson = lessons.find(l => l.id === lessonId);
 
+  const [aetTargets, setAetTargets] = useState<string[]>(() => lesson?.aetTargets || []);
+  const [currObjectives, setCurrObjectives] = useState<string[]>(() => lesson?.curriculumObjectives || []);
+  const [editingAetIdx, setEditingAetIdx] = useState<number | null>(null);
+  const [editingCurrIdx, setEditingCurrIdx] = useState<number | null>(null);
+  const [newAet, setNewAet] = useState("");
+  const [newCurr, setNewCurr] = useState("");
+
   if (!classroom || !lesson) return <div className="p-8">Lesson not found.</div>;
 
   const classStudents = getClassroomStudents(classroom.id);
