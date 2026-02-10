@@ -183,6 +183,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 4 Working Towards",
     britishCurriculumScore: 40,
     notes: "Enjoys art-based activities. Responds well to positive reinforcement.",
+    grade: "Year 4",
+    aetSkills: [
+      { label: "Managing Emotions", color: "green" },
+      { label: "Communication", color: "purple" },
+    ],
     strengths: ["Artistic expression", "Fine motor skills", "Empathy"],
     supportNeeds: ["Verbal communication prompts", "Structured choices", "Calm-down strategies"],
   },
