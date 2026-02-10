@@ -65,13 +65,12 @@ const iconMap: Record<string, React.ReactNode> = {
   Heart: <Heart className="h-5 w-5" />,
 };
 
-const subjectColors: Record<string, string> = {
-  english: "bg-yusr-sky/10 text-yusr-sky border-yusr-sky/20",
-  maths: "bg-yusr-indigo/10 text-yusr-indigo border-yusr-indigo/20",
-  science: "bg-yusr-emerald/10 text-yusr-emerald border-yusr-emerald/20",
-  art: "bg-yusr-purple/10 text-yusr-purple border-yusr-purple/20",
-  pe: "bg-yusr-coral/10 text-yusr-coral border-yusr-coral/20",
-  pse: "bg-yusr-amber/10 text-yusr-amber border-yusr-amber/20",
+const aetSkillColors: Record<string, string> = {
+  green: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  orange: "bg-amber-100 text-amber-700 border-amber-200",
+  blue: "bg-sky-100 text-sky-700 border-sky-200",
+  purple: "bg-purple-100 text-purple-700 border-purple-200",
+  red: "bg-rose-100 text-rose-700 border-rose-200",
 };
 
 const ClassroomDashboard = () => {
