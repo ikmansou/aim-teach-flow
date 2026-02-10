@@ -520,7 +520,7 @@ const LessonDetail = () => {
                     className="min-h-[40px] max-h-[80px] text-sm resize-none"
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
                   />
-                  <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim()}>
+                  <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim() || isStreaming}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
