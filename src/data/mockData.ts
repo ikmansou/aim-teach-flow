@@ -227,6 +227,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 2 Greater Depth",
     britishCurriculumScore: 48,
     notes: "Quiet but observant. Excels when given time to process before responding.",
+    grade: "KG 2",
+    aetSkills: [
+      { label: "Sensory Processing", color: "red" },
+      { label: "Social Awareness", color: "blue" },
+    ],
     strengths: ["Observation skills", "Written expression", "Following instructions"],
     supportNeeds: ["Processing time", "Small group settings", "Visual cues"],
   },
