@@ -1,37 +1,56 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/PageHeader";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import {
   classrooms,
   subjects,
   getClassroomStudents,
-  getStudentInitials,
   getAetBgClass,
 } from "@/data/mockData";
-import { BookOpen, Calculator, FlaskConical, Palette, Dumbbell, Heart, Lock, Users, TrendingUp } from "lucide-react";
+import { BookOpen, Calculator, FlaskConical, Palette, Dumbbell, Heart, Lock, Users } from "lucide-react";
 
-const iconMap: Record<string, React.ReactNode> = {
-  BookOpen: <BookOpen className="h-4 w-4" />,
-  Calculator: <Calculator className="h-4 w-4" />,
-  Flask: <FlaskConical className="h-4 w-4" />,
-  Palette: <Palette className="h-4 w-4" />,
-  Dumbbell: <Dumbbell className="h-4 w-4" />,
-  Heart: <Heart className="h-4 w-4" />,
+// Student photo imports
+import omarPhoto from "@/assets/students/omar.png";
+import laylaPhoto from "@/assets/students/layla.png";
+import khalidPhoto from "@/assets/students/khalid.png";
+import mariamPhoto from "@/assets/students/mariam.png";
+import yusufPhoto from "@/assets/students/yusuf.png";
+import saraPhoto from "@/assets/students/sara.png";
+import rashidPhoto from "@/assets/students/rashid.png";
+import nouraPhoto from "@/assets/students/noura.png";
+import classroomIllustration from "@/assets/classroom-illustration.png";
+
+const studentPhotos: Record<string, string> = {
+  omar: omarPhoto,
+  layla: laylaPhoto,
+  khalid: khalidPhoto,
+  mariam: mariamPhoto,
+  yusuf: yusufPhoto,
+  sara: saraPhoto,
+  rashid: rashidPhoto,
+  noura: nouraPhoto,
 };
 
-const avatarColors = [
-  "bg-yusr-sky text-primary-foreground",
-  "bg-yusr-teal text-primary-foreground",
-  "bg-yusr-amber text-accent-foreground",
-  "bg-yusr-coral text-primary-foreground",
-  "bg-yusr-indigo text-primary-foreground",
-  "bg-yusr-purple text-primary-foreground",
-];
+const iconMap: Record<string, React.ReactNode> = {
+  BookOpen: <BookOpen className="h-5 w-5" />,
+  Calculator: <Calculator className="h-5 w-5" />,
+  Flask: <FlaskConical className="h-5 w-5" />,
+  Palette: <Palette className="h-5 w-5" />,
+  Dumbbell: <Dumbbell className="h-5 w-5" />,
+  Heart: <Heart className="h-5 w-5" />,
+};
+
+const subjectColors: Record<string, string> = {
+  english: "bg-yusr-sky/10 text-yusr-sky border-yusr-sky/20",
+  maths: "bg-yusr-indigo/10 text-yusr-indigo border-yusr-indigo/20",
+  science: "bg-yusr-emerald/10 text-yusr-emerald border-yusr-emerald/20",
+  art: "bg-yusr-purple/10 text-yusr-purple border-yusr-purple/20",
+  pe: "bg-yusr-coral/10 text-yusr-coral border-yusr-coral/20",
+  pse: "bg-yusr-amber/10 text-yusr-amber border-yusr-amber/20",
+};
 
 const ClassroomDashboard = () => {
   const { classroomId } = useParams();
@@ -53,90 +72,105 @@ const ClassroomDashboard = () => {
           ]}
         />
 
-        <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-foreground">{classroom.name}</h1>
-          <p className="text-muted-foreground mt-1">{classroom.year} · {classStudents.length} students</p>
-        </div>
-
-        {/* Readiness Card */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="mb-8 border-primary/20 bg-gradient-to-r from-card to-muted/30">
-            <CardContent className="py-6">
-              <div className="flex items-center gap-4">
-                <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <TrendingUp className="h-7 w-7 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground font-medium">Overall Classroom Readiness</p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <Progress value={classroom.readiness} className="flex-1 h-3" />
-                    <span className="text-2xl font-bold text-foreground">{classroom.readiness}%</span>
-                  </div>
-                </div>
+        {/* Classroom Illustration Banner */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="relative rounded-2xl overflow-hidden h-44 md:h-52">
+            <img
+              src={classroomIllustration}
+              alt="Classroom illustration"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 to-transparent" />
+            <div className="absolute inset-0 flex items-center px-8">
+              <div>
+                <h1 className="font-display text-3xl md:text-4xl font-extrabold text-white drop-shadow-lg">
+                  {classroom.name}
+                </h1>
+                <p className="text-white/80 mt-1 text-sm font-medium">
+                  {classroom.year} · {classStudents.length} students
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </motion.div>
 
-        <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
-          {/* Subjects Panel */}
+        <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
+          {/* Subjects Sidebar */}
           <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-            <Card>
+            <Card className="border-border/60">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Subjects</CardTitle>
+                <CardTitle className="text-base font-bold">Subjects</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-1.5">
-                {subjects.map(subject => (
-                  <button
-                    key={subject.id}
-                    onClick={() => subject.active && navigate(`/classroom/${classroom.id}/subject/${subject.id}`)}
-                    disabled={!subject.active}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all text-left ${
-                      subject.active
-                        ? "hover:bg-primary/10 text-foreground cursor-pointer font-medium"
-                        : "text-muted-foreground/50 cursor-not-allowed"
-                    }`}
-                  >
-                    {iconMap[subject.icon]}
-                    <span>{subject.name}</span>
-                    {!subject.active && <Lock className="h-3 w-3 ml-auto" />}
-                  </button>
-                ))}
+              <CardContent className="space-y-2">
+                {subjects.map(subject => {
+                  const colorClass = subjectColors[subject.id] || "";
+                  return (
+                    <button
+                      key={subject.id}
+                      onClick={() => subject.active && navigate(`/classroom/${classroom.id}/subject/${subject.id}`)}
+                      disabled={!subject.active}
+                      className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm transition-all text-left border ${
+                        subject.active
+                          ? `${colorClass} hover:shadow-sm cursor-pointer font-semibold`
+                          : "text-muted-foreground/40 border-transparent cursor-not-allowed"
+                      }`}
+                    >
+                      {iconMap[subject.icon]}
+                      <span>{subject.name}</span>
+                      {!subject.active && <Lock className="h-3.5 w-3.5 ml-auto" />}
+                    </button>
+                  );
+                })}
               </CardContent>
             </Card>
           </motion.div>
 
-          {/* Student Grid */}
+          {/* Student ID Cards Grid */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-5">
               <Users className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-display text-lg font-bold text-foreground">Students</h2>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {classStudents.map((student, i) => (
                 <motion.div
                   key={student.id}
-                  initial={{ opacity: 0, y: 12 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15 + i * 0.05 }}
+                  transition={{ delay: 0.12 + i * 0.05 }}
                 >
                   <Card
-                    className="cursor-pointer hover:shadow-md hover:border-primary/20 transition-all"
+                    className="cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
                     onClick={() => navigate(`/classroom/${classroom.id}/student/${student.id}`)}
                   >
-                    <CardContent className="py-4 px-4 flex items-center gap-4">
-                      <Avatar className={`h-12 w-12 ${avatarColors[i % avatarColors.length]}`}>
-                        <AvatarFallback className={avatarColors[i % avatarColors.length]}>
-                          {getStudentInitials(student.name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-foreground truncate">{student.name}</p>
+                    {/* Photo area */}
+                    <div className="flex justify-center pt-5 pb-3">
+                      <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-muted shadow-md">
+                        <img
+                          src={studentPhotos[student.photo] || ""}
+                          alt={student.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Info area */}
+                    <CardContent className="text-center pb-5 px-4 pt-0 space-y-3">
+                      <div>
+                        <p className="font-display font-bold text-foreground text-sm">{student.name}</p>
                         <p className="text-xs text-muted-foreground">Age {student.age}</p>
                       </div>
-                      <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-[10px] px-2`}>
-                        {student.aetLevel}
-                      </Badge>
+
+                      <div className="flex items-center justify-center gap-2">
+                        <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-[10px] px-2.5 py-0.5`}>
+                          {student.aetLevel}
+                        </Badge>
+                      </div>
+
+                      <div className="bg-muted/50 rounded-lg px-3 py-1.5">
+                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Curriculum</p>
+                        <p className="text-xs font-semibold text-foreground">{student.britishCurriculumLevel}</p>
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
