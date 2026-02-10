@@ -127,6 +127,7 @@ const StudentProfile = () => {
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-2 text-white/80 text-sm">
                   <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> Age {student.age}</span>
                   <span className="flex items-center gap-1.5"><User2 className="h-3.5 w-3.5" /> {student.grade}</span>
+                  <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5" /> {classroom.year}</span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-xs px-3 py-0.5 shadow-md`}>
