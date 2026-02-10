@@ -149,7 +149,7 @@ const ClassroomDashboard = () => {
               <Users className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-display text-lg font-bold text-foreground">Students</h2>
             </div>
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {classStudents.map((student, i) => (
                 <motion.div
                   key={student.id}
@@ -157,35 +157,41 @@ const ClassroomDashboard = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.12 + i * 0.05 }}
                 >
-                  <Card
-                    className="cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                  <div
+                    className="cursor-pointer group rounded-2xl overflow-hidden border border-border bg-card hover:shadow-lg hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
                     onClick={() => navigate(`/classroom/${classroom.id}/student/${student.id}`)}
                   >
-                    <div className="flex justify-center pt-5 pb-3">
-                      <div className="w-20 h-20 rounded-full overflow-hidden ring-4 ring-muted shadow-md">
+                    {/* Colored top strip based on AET level */}
+                    <div className={`h-2 ${getAetBgClass(student.aetLevel)}`} />
+
+                    <div className="flex items-start gap-4 p-4">
+                      {/* Photo */}
+                      <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-muted shadow-sm shrink-0">
                         <img
                           src={studentPhotos[student.photo] || ""}
                           alt={student.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div>
+                          <p className="font-display font-bold text-foreground text-sm truncate">{student.name}</p>
+                          <p className="text-[11px] text-muted-foreground">Age {student.age} · {student.gender === "male" ? "♂" : "♀"}</p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-[10px] px-2 py-0 h-5`}>
+                            {student.aetLevel}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px] px-2 py-0 h-5 font-medium border-border text-muted-foreground">
+                            {student.britishCurriculumLevel}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
-                    <CardContent className="text-center pb-5 px-4 pt-0 space-y-3">
-                      <div>
-                        <p className="font-display font-bold text-foreground text-sm">{student.name}</p>
-                        <p className="text-xs text-muted-foreground">Age {student.age}</p>
-                      </div>
-                      <div className="flex items-center justify-center gap-2">
-                        <Badge className={`${getAetBgClass(student.aetLevel)} text-primary-foreground text-[10px] px-2.5 py-0.5`}>
-                          {student.aetLevel}
-                        </Badge>
-                      </div>
-                      <div className="bg-muted/50 rounded-lg px-3 py-1.5">
-                        <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Curriculum</p>
-                        <p className="text-xs font-semibold text-foreground">{student.britishCurriculumLevel}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  </div>
                 </motion.div>
               ))}
             </div>
