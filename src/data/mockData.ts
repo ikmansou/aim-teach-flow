@@ -94,6 +94,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 2 Expected",
     britishCurriculumScore: 52,
     notes: "Benefits from one-to-one instruction. Strong interest in storytelling.",
+    grade: "Year 2",
+    aetSkills: [
+      { label: "Learning Through Play", color: "orange" },
+      { label: "Communication", color: "purple" },
+    ],
     strengths: ["Creative expression", "Verbal storytelling", "Memory recall"],
     supportNeeds: ["Group work facilitation", "Emotional regulation support", "Clear instructions"],
   },
