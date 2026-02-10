@@ -111,7 +111,7 @@ export const students: Record<string, Student> = {
     id: "s4",
     name: "Mariam Zahrani",
     age: 9,
-    photo: "",
+    photo: "mariam",
     gender: "female",
     dateOfBirth: "2017-01-30",
     guardianName: "Hassan Zahrani",
