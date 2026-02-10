@@ -11,7 +11,8 @@ import { students, classrooms, getAetBgClass } from "@/data/mockData";
 import { getStudentAetDetails } from "@/data/aetDetails";
 import type { StudentAetDetail } from "@/data/aetDetails";
 import AetDetailTable from "@/components/AetDetailTable";
-import { Calendar, Phone, User2, BookOpen, Shield, Sparkles, ArrowLeft, Pencil, Check, X } from "lucide-react";
+import { Calendar, Phone, User2, BookOpen, Shield, Sparkles, ArrowLeft, Pencil, Check, X, GraduationCap } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import omarPhoto from "@/assets/students/omar.png";
 import laylaPhoto from "@/assets/students/layla.png";
