@@ -116,6 +116,11 @@ export const students: Record<string, Student> = {
     britishCurriculumLevel: "Year 4 Expected",
     britishCurriculumScore: 65,
     notes: "Making strong progress. Enjoys collaborative learning with structured roles.",
+    grade: "Year 4",
+    aetSkills: [
+      { label: "Relationships", color: "blue" },
+      { label: "Flexibility", color: "orange" },
+    ],
     strengths: ["Logical thinking", "Following routines", "Written expression"],
     supportNeeds: ["Flexibility in tasks", "Peer interaction coaching"],
   },
