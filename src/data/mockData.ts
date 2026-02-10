@@ -149,6 +149,8 @@ export const students: Record<string, Student> = {
       { label: "Communication", color: "purple" },
       { label: "Sensory Processing", color: "red" },
       { label: "Flexibility", color: "orange" },
+      { label: "Social Awareness", color: "blue" },
+      { label: "Managing Emotions", color: "green" },
     ],
     strengths: ["Technology skills", "Visual processing", "Determination"],
     supportNeeds: ["AAC support", "Extended processing time", "Modified worksheets"],
