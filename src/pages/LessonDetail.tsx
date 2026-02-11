@@ -36,12 +36,6 @@ import { Input } from "@/components/ui/input";
 
 const LessonDetail = () => {
   const { classroomId, subjectId, lessonId } = useParams();
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ role: "user" | "assistant"; content: string; imageUrl?: string }[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-
   const classroom = classrooms.find(c => c.id === classroomId);
   const lesson = lessons.find(l => l.id === lessonId);
   const classStudents = classroom ? getClassroomStudents(classroom.id) : [];
