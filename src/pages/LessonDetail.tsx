@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
+import { downloadMarkdownAsPdf } from "@/lib/generatePdf";
 import {
   classrooms,
   lessons,
@@ -31,6 +32,7 @@ import {
   X,
   Send,
   Sparkles,
+  Download,
   Plus,
   Trash2,
   Upload,
@@ -546,6 +548,16 @@ const LessonDetail = () => {
                             <ReactMarkdown>{msg.content}</ReactMarkdown>
                             {msg.imageUrl && (
                               <img src={msg.imageUrl} alt="Generated visual aid" className="mt-2 rounded-lg max-w-full" />
+                            )}
+                            {msg.content && msg.content.length > 50 && (
+                              <button
+                                onClick={() => downloadMarkdownAsPdf(msg.content, `resource-${Date.now()}.pdf`)}
+                                className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                                title="Download as PDF"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                                Download PDF
+                              </button>
                             )}
                           </>
                         )}
