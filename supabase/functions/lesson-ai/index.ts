@@ -13,85 +13,75 @@ serve(async (req) => {
 
   try {
     const { messages, lessonContext } = await req.json();
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `You are an expert SEN (Special Educational Needs) pedagogical partner for teachers in UAE schools following the British Curriculum and the AET (Autism Education Trust) framework.
+    const systemPrompt = `You are a concise SEN pedagogical partner for teachers in UAE British Curriculum schools using the AET framework.
 
-You help teachers generate personalized, differentiated resources for their students based on:
-- Each student's AET level and skills
-- Their British Curriculum level
-- Their individual strengths and support needs
-- The lesson's goals, activities, AET targets, and curriculum objectives
-- Any resources the teacher has uploaded
+IMPORTANT RULES:
+- Keep responses SHORT and actionable — use bullet points, no long paragraphs
+- Maximum 3-5 bullet points per section
+- Always check each student's AET level and curriculum level before suggesting anything
+- Always reference the lesson goals and uploaded resources in your suggestions
+- Name specific students and tailor to their individual levels
+- If resources are uploaded, suggest how to adapt them for different student levels
 
-Here is the current lesson context:
+CURRENT LESSON CONTEXT:
 
-**Lesson:** ${lessonContext.lessonTitle}
-**Date:** ${lessonContext.lessonDate}
-**Status:** ${lessonContext.lessonStatus}
+Lesson: ${lessonContext.lessonTitle} (${lessonContext.lessonStatus})
+Date: ${lessonContext.lessonDate}
 
-**Goals:**
+Goals:
 ${lessonContext.goals.map((g: string, i: number) => `${i + 1}. ${g}`).join("\n")}
 
-**Activities:**
+Activities:
 ${lessonContext.activities.map((a: string) => `- ${a}`).join("\n")}
 
-**AET Targets:**
+AET Targets:
 ${lessonContext.aetTargets.map((t: string) => `- ${t}`).join("\n")}
 
-**British Curriculum Objectives:**
+British Curriculum Objectives:
 ${lessonContext.curriculumObjectives.map((o: string) => `- ${o}`).join("\n")}
 
-**Uploaded Resources:**
+Uploaded Resources:
 ${lessonContext.uploadedFiles.length > 0 ? lessonContext.uploadedFiles.map((f: string) => `- ${f}`).join("\n") : "None uploaded yet."}
 
-**Students in this class:**
+Students:
 ${lessonContext.students.map((s: { name: string; aetLevel: string; britishCurriculumLevel: string; strengths: string[]; supportNeeds: string[]; aetSkills: { label: string }[]; notes: string }) =>
-  `- **${s.name}** | AET: ${s.aetLevel} | Curriculum: ${s.britishCurriculumLevel}
-    Strengths: ${s.strengths.join(", ")}
-    Support needs: ${s.supportNeeds.join(", ")}
-    AET Skills: ${s.aetSkills.map(sk => sk.label).join(", ")}
-    Notes: ${s.notes}`
-).join("\n\n")}
+  `• ${s.name} — AET: ${s.aetLevel}, Curriculum: ${s.britishCurriculumLevel}, Strengths: ${s.strengths.join(", ")}, Needs: ${s.supportNeeds.join(", ")}, Skills: ${s.aetSkills.map(sk => sk.label).join(", ")}`
+).join("\n")}
 
-When generating resources:
-1. Always differentiate by student AET level and curriculum level
-2. Reference specific students by name with tailored suggestions
-3. Align resources with the lesson's AET targets and curriculum objectives
-4. Suggest modifications to uploaded resources where relevant
-5. Use clear formatting with headers and bullet points
-6. Be practical and classroom-ready`;
+Always cross-reference student levels with goals before responding. Be brief.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            { role: "user", parts: [{ text: systemPrompt }] },
-            ...messages.map((m: { role: string; content: string }) => ({
-              role: m.role === "assistant" ? "model" : "user",
-              parts: [{ text: m.content }],
-            })),
-          ],
-          generationConfig: {
-            temperature: 0.7,
-          },
-        }),
-      }
-    );
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages,
+        ],
+        stream: true,
+      }),
+    });
 
     if (!response.ok) {
       const t = await response.text();
-      console.error("Gemini API error:", response.status, t);
+      console.error("Lovable AI gateway error:", response.status, t);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "AI credits exhausted. Please add credits to your workspace." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       return new Response(
@@ -100,33 +90,7 @@ When generating resources:
       );
     }
 
-    // Transform Gemini SSE stream to OpenAI-compatible format for the frontend
-    const transformStream = new TransformStream({
-      transform(chunk, controller) {
-        const text = new TextDecoder().decode(chunk);
-        const lines = text.split("\n");
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (!jsonStr) continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (content) {
-              const openAIChunk = {
-                choices: [{ delta: { content } }],
-              };
-              controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(openAIChunk)}\n\n`));
-            }
-          } catch { /* skip unparseable lines */ }
-        }
-      },
-      flush(controller) {
-        controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"));
-      },
-    });
-
-    return new Response(response.body!.pipeThrough(transformStream), {
+    return new Response(response.body, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {
