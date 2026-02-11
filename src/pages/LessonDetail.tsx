@@ -64,25 +64,41 @@ const LessonDetail = () => {
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: number; type: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const buildLessonContext = useCallback(() => ({
-    lessonTitle: lesson?.title || "",
-    lessonDate: lesson?.date || "",
-    lessonStatus: lesson?.status || "",
-    goals: lesson?.goals || [],
-    activities: lesson?.activities || [],
-    aetTargets,
-    curriculumObjectives: currObjectives,
-    uploadedFiles: uploadedFiles.map(f => f.name),
-    students: classStudents.map(s => ({
-      name: s.name,
-      aetLevel: s.aetLevel,
-      britishCurriculumLevel: s.britishCurriculumLevel,
-      strengths: s.strengths,
-      supportNeeds: s.supportNeeds,
-      aetSkills: s.aetSkills,
-      notes: s.notes,
-    })),
-  }), [lesson, aetTargets, currObjectives, uploadedFiles, classStudents]);
+  const buildLessonContext = useCallback(() => {
+    // Gather previous lessons for this classroom+subject to get goal achievement history
+    const classroomLessons = lessons.filter(
+      l => l.classroomId === classroomId && l.subjectId === subjectId && l.status === "completed"
+    );
+    const studentHistory = classStudents.map(s => {
+      const pastResults = classroomLessons.map(pl => {
+        const fb = pl.studentFeedback[s.id];
+        if (!fb) return null;
+        return { lesson: pl.title, goalMet: fb.met, notes: fb.notes };
+      }).filter(Boolean);
+      return {
+        name: s.name,
+        aetLevel: s.aetLevel,
+        britishCurriculumLevel: s.britishCurriculumLevel,
+        strengths: s.strengths,
+        supportNeeds: s.supportNeeds,
+        aetSkills: s.aetSkills,
+        notes: s.notes,
+        previousGoalAchievement: pastResults,
+      };
+    });
+
+    return {
+      lessonTitle: lesson?.title || "",
+      lessonDate: lesson?.date || "",
+      lessonStatus: lesson?.status || "",
+      goals: lesson?.goals || [],
+      activities: lesson?.activities || [],
+      aetTargets,
+      curriculumObjectives: currObjectives,
+      uploadedFiles: uploadedFiles.map(f => f.name),
+      students: studentHistory,
+    };
+  }, [lesson, aetTargets, currObjectives, uploadedFiles, classStudents, classroomId, subjectId]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
