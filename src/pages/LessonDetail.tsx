@@ -515,7 +515,7 @@ const LessonDetail = () => {
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                className="fixed bottom-24 right-6 w-[480px] max-h-[600px] bg-card border rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden"
+                className="fixed bottom-6 right-6 w-[560px] max-h-[75vh] bg-card border rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden"
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b bg-primary/5">
                   <div className="flex items-center gap-2">
@@ -527,7 +527,7 @@ const LessonDetail = () => {
                   </Button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[280px] max-h-[440px]">
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[350px]">
                   {chatMessages.length === 0 && (
                     <div className="text-center text-sm text-muted-foreground py-8">
                       <Sparkles className="h-8 w-8 mx-auto mb-3 text-primary/40" />
