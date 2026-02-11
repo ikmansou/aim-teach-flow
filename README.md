@@ -1,8 +1,8 @@
-# Welcome to your Lovable project
+# This project was developed during a hackathon aimed at reducing the administrative burden faced by Special Educational Needs (SEN) teachers
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**URL**: https://aim-teach-flow.lovable.app/
 
 ## How can I edit this code?
 
