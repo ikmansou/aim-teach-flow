@@ -44,9 +44,10 @@ import { Input } from "@/components/ui/input";
 const LessonDetail = () => {
   const { classroomId, subjectId, lessonId } = useParams();
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [chatMessages, setChatMessages] = useState<{ role: "user" | "assistant"; content: string; imageUrl?: string }[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const classroom = classrooms.find(c => c.id === classroomId);
   const lesson = lessons.find(l => l.id === lessonId);
@@ -184,6 +185,42 @@ const LessonDetail = () => {
       setChatMessages(prev => prev.filter(m => !(m.role === "assistant" && m.content === "")));
     } finally {
       setIsStreaming(false);
+    }
+  };
+
+  const handleGenerateImage = async () => {
+    if (!chatInput.trim() || isStreaming || isGeneratingImage) return;
+    const prompt = chatInput.trim();
+    setChatMessages(prev => [...prev, { role: "user", content: `🖼️ Generate image: ${prompt}` }]);
+    setChatInput("");
+    setIsGeneratingImage(true);
+
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        throw new Error(errData.error || `Error ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      setChatMessages(prev => [...prev, {
+        role: "assistant",
+        content: data.text || "Here's your generated image:",
+        imageUrl: data.imageUrl || undefined,
+      }]);
+    } catch (e: any) {
+      console.error("Image generation error:", e);
+      toast.error(e.message || "Failed to generate image");
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -504,10 +541,27 @@ const LessonDetail = () => {
                           ? "bg-primary text-primary-foreground whitespace-pre-wrap"
                           : "bg-muted text-foreground prose prose-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-2 max-w-none"
                       }`}>
-                        {msg.role === "user" ? msg.content : <ReactMarkdown>{msg.content}</ReactMarkdown>}
+                        {msg.role === "user" ? msg.content : (
+                          <>
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            {msg.imageUrl && (
+                              <img src={msg.imageUrl} alt="Generated visual aid" className="mt-2 rounded-lg max-w-full" />
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
+                  {isGeneratingImage && (
+                    <div className="flex justify-start">
+                      <div className="max-w-[85%] px-3 py-2 rounded-xl text-sm bg-muted text-foreground">
+                        <div className="flex items-center gap-2">
+                          <Image className="h-4 w-4 animate-pulse text-primary" />
+                          <span className="text-muted-foreground">Generating image...</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-t p-3 flex gap-2">
@@ -518,7 +572,16 @@ const LessonDetail = () => {
                     className="min-h-[40px] max-h-[80px] text-sm resize-none"
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
                   />
-                  <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim() || isStreaming}>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={handleGenerateImage}
+                    disabled={!chatInput.trim() || isStreaming || isGeneratingImage}
+                    title="Generate image"
+                  >
+                    <Image className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim() || isStreaming || isGeneratingImage}>
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
