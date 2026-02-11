@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Rate limiter: max 5 image requests per IP per minute
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_MAX = 15;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 
 function isRateLimited(ip: string): boolean {
