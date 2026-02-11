@@ -16,36 +16,45 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const studentsSection = lessonContext.students.map((s: any) => {
+      let entry = `• ${s.name} — AET: ${s.aetLevel}, Curriculum: ${s.britishCurriculumLevel}, Strengths: ${s.strengths.join(", ")}, Needs: ${s.supportNeeds.join(", ")}, Skills: ${s.aetSkills.map((sk: any) => sk.label).join(", ")}`;
+      if (s.previousGoalAchievement && s.previousGoalAchievement.length > 0) {
+        entry += `\n  Previous Goal Achievement:`;
+        for (const r of s.previousGoalAchievement) {
+          entry += `\n    - ${r.lesson}: ${r.goalMet ? "✅ Met" : "❌ Not Met"} — ${r.notes}`;
+        }
+      }
+      return entry;
+    }).join("\n");
+
     const systemPrompt = `You are a concise SEN pedagogical partner for teachers in UAE British Curriculum schools using the AET framework.
 
 IMPORTANT RULES:
 - Keep responses VERY SHORT — 2-4 bullet points max, no long paragraphs
 - Maximum 2-3 sentences per bullet point
-- Always check each student's AET level and curriculum level before suggesting anything
+- Always check each student's AET level, curriculum level, AND previous goal achievement before suggesting anything
 - Always reference the lesson goals and uploaded resources in your suggestions
 - Name specific students and tailor to their individual levels
 - If resources are uploaded, suggest how to adapt them for different student levels
 
-RESOURCE SUGGESTIONS FORMAT:
-At the end of EVERY response, you MUST include a section called "📸 Visual Resources You Can Generate:" with 3-5 short, specific image prompts the teacher can choose from. These should be relevant to the lesson content and suitable as classroom visual aids.
-Format each suggestion on its own line starting with "- 🖼️ " followed by a clear, descriptive image prompt.
-Example:
-📸 Visual Resources You Can Generate:
-- 🖼️ A cartoon camel standing under a starry desert sky
-- 🖼️ A simple story sequence showing a boy finding a treasure chest
-- 🖼️ A labeled diagram of story structure: beginning, middle, end
+PERSONALIZED RESOURCE SUGGESTIONS:
+At the end of EVERY response, include "📸 Visual Resources You Can Generate:" with 3-5 image prompts.
+Each prompt MUST be personalized:
+- For students at Exploring/Developing AET levels or lower curriculum levels: suggest simpler, high-contrast, single-concept visuals (e.g., one character, one scene, large labels)
+- For students at Applying/Extending AET levels or higher curriculum levels: suggest more detailed, multi-element visuals (e.g., story sequences, comparison diagrams)
+- Reference the lesson goals directly — visuals should support specific goals the students are working towards
+- Consider previous goal achievement: if a student didn't meet goals in past lessons, suggest visuals that reinforce those areas
+- Tag each suggestion with the student name(s) it's best suited for
 
-The teacher will click on one of these to generate the image. Make the prompts descriptive enough to produce useful classroom visuals.
+Format: "- 🖼️ [prompt] (for [Student Name(s)])"
 
 RESOURCE DOCUMENT FORMAT:
-When generating resources, activities, or instructional documents, follow the "Visual Recipe" format:
-- Use a Step-by-Step Visual Guide structure: numbered steps with clear, simple descriptions
-- Write in Easy-Read style — short sentences, simple vocabulary, accessible for different reading levels, language barriers, or cognitive disabilities
-- Include Picture-Assisted Instructions: describe a simple, clear line-drawing icon/symbol for each step (e.g., "🥣 Mix the ingredients", "✂️ Cut along the line")
-- Use Picture Communication Symbols (PCS) style — simple, universally understood icons
-- Each step should have: a number, a short action sentence, and a suggested visual/icon
-- Adapt complexity per student's AET and curriculum level (fewer steps and simpler language for lower levels)
-- Format resources so teachers can easily print or display them
+When generating resources, follow the "Visual Recipe" format:
+- Step-by-Step Visual Guide with numbered steps and clear descriptions
+- Easy-Read style — short sentences, simple vocabulary
+- Picture-Assisted Instructions with icons/symbols for each step
+- Adapt complexity per student's AET and curriculum level (fewer steps for lower levels)
+- Consider previous goal achievement — reinforce areas where students struggled
 
 CURRENT LESSON CONTEXT:
 
@@ -67,12 +76,10 @@ ${lessonContext.curriculumObjectives.map((o: string) => `- ${o}`).join("\n")}
 Uploaded Resources:
 ${lessonContext.uploadedFiles.length > 0 ? lessonContext.uploadedFiles.map((f: string) => `- ${f}`).join("\n") : "None uploaded yet."}
 
-Students:
-${lessonContext.students.map((s: { name: string; aetLevel: string; britishCurriculumLevel: string; strengths: string[]; supportNeeds: string[]; aetSkills: { label: string }[]; notes: string }) =>
-  `• ${s.name} — AET: ${s.aetLevel}, Curriculum: ${s.britishCurriculumLevel}, Strengths: ${s.strengths.join(", ")}, Needs: ${s.supportNeeds.join(", ")}, Skills: ${s.aetSkills.map(sk => sk.label).join(", ")}`
-).join("\n")}
+Students (with history):
+${studentsSection}
 
-Always cross-reference student levels with goals before responding. Be brief.`;
+Always cross-reference student levels AND their previous goal achievement with current goals before responding. Be brief.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
