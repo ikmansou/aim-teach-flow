@@ -190,6 +190,42 @@ const LessonDetail = () => {
     }
   };
 
+  const handleGenerateImageDirect = async (directPrompt: string) => {
+    if (!directPrompt.trim() || isStreaming || isGeneratingImage) return;
+    const prompt = directPrompt.trim();
+    setChatMessages(prev => [...prev, { role: "user", content: `🖼️ Generate image: ${prompt}` }]);
+    setChatInput("");
+    setIsGeneratingImage(true);
+
+    try {
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!resp.ok) {
+        const errData = await resp.json().catch(() => ({}));
+        throw new Error(errData.error || `Error ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      setChatMessages(prev => [...prev, {
+        role: "assistant",
+        content: data.text || "Here's your generated image:",
+        imageUrl: data.imageUrl || undefined,
+      }]);
+    } catch (e: any) {
+      console.error("Image generation error:", e);
+      toast.error(e.message || "Failed to generate image");
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const handleGenerateImage = async () => {
     if (!chatInput.trim() || isStreaming || isGeneratingImage) return;
     const prompt = chatInput.trim();
@@ -536,34 +572,81 @@ const LessonDetail = () => {
                       <p>Ask me to generate resources, differentiate materials, or suggest activities for your students.</p>
                     </div>
                   )}
-                  {chatMessages.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${
-                        msg.role === "user"
-                          ? "bg-primary text-primary-foreground whitespace-pre-wrap"
-                          : "bg-muted text-foreground prose prose-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-2 max-w-none"
-                      }`}>
-                        {msg.role === "user" ? msg.content : (
-                          <>
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
-                            {msg.imageUrl && (
-                              <img src={msg.imageUrl} alt="Generated visual aid" className="mt-2 rounded-lg max-w-full" />
-                            )}
-                            {msg.content && msg.content.length > 50 && (
-                              <button
-                                onClick={() => downloadMarkdownAsPdf(msg.content, `resource-${Date.now()}.pdf`)}
-                                className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
-                                title="Download as PDF"
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                                Download PDF
-                              </button>
-                            )}
-                          </>
-                        )}
+                  {chatMessages.map((msg, i) => {
+                    // Extract image prompts from assistant messages
+                    const extractImagePrompts = (content: string): { cleanContent: string; prompts: string[] } => {
+                      const prompts: string[] = [];
+                      const lines = content.split("\n");
+                      const cleanLines: string[] = [];
+                      let inResourceSection = false;
+                      for (const line of lines) {
+                        if (line.includes("📸 Visual Resources You Can Generate")) {
+                          inResourceSection = true;
+                          continue;
+                        }
+                        if (inResourceSection && line.trim().startsWith("- 🖼️")) {
+                          prompts.push(line.trim().replace(/^-\s*🖼️\s*/, ""));
+                        } else if (inResourceSection && line.trim() === "") {
+                          continue;
+                        } else {
+                          if (inResourceSection && !line.trim().startsWith("- 🖼️")) inResourceSection = false;
+                          cleanLines.push(line);
+                        }
+                      }
+                      return { cleanContent: cleanLines.join("\n").trim(), prompts };
+                    };
+
+                    const isAssistant = msg.role === "assistant";
+                    const { cleanContent, prompts: imagePrompts } = isAssistant ? extractImagePrompts(msg.content) : { cleanContent: msg.content, prompts: [] };
+
+                    return (
+                      <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                        <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${
+                          msg.role === "user"
+                            ? "bg-primary text-primary-foreground whitespace-pre-wrap"
+                            : "bg-muted text-foreground prose prose-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-2 max-w-none"
+                        }`}>
+                          {msg.role === "user" ? msg.content : (
+                            <>
+                              <ReactMarkdown>{cleanContent}</ReactMarkdown>
+                              {imagePrompts.length > 0 && (
+                                <div className="mt-3 space-y-1.5 not-prose">
+                                  <p className="text-[11px] font-semibold text-muted-foreground">📸 Generate a visual:</p>
+                                  {imagePrompts.map((prompt, pi) => (
+                                    <button
+                                      key={pi}
+                                      onClick={() => {
+                                        setChatInput(prompt);
+                                        handleGenerateImageDirect(prompt);
+                                      }}
+                                      disabled={isGeneratingImage || isStreaming}
+                                      className="w-full text-left px-2.5 py-1.5 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 text-[11px] text-foreground transition-colors flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                      <Image className="h-3.5 w-3.5 text-primary shrink-0" />
+                                      {prompt}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                              {msg.imageUrl && (
+                                <img src={msg.imageUrl} alt="Generated visual aid" className="mt-2 rounded-lg max-w-full" />
+                              )}
+                              {cleanContent && cleanContent.length > 50 && (
+                                <button
+                                  onClick={() => downloadMarkdownAsPdf(msg.content, `resource-${Date.now()}.pdf`)}
+                                  className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                                  title="Download as PDF"
+                                >
+                                  <Download className="h-3.5 w-3.5" />
+                                  Download PDF
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {isGeneratingImage && (
                     <div className="flex justify-start">
                       <div className="max-w-[85%] px-3 py-2 rounded-xl text-sm bg-muted text-foreground">
