@@ -190,11 +190,9 @@ const LessonDetail = () => {
     }
   };
 
-  const handleGenerateImage = async () => {
-    if (!chatInput.trim() || isStreaming || isGeneratingImage) return;
-    const prompt = chatInput.trim();
-    setChatMessages(prev => [...prev, { role: "user", content: `🖼️ Generate image: ${prompt}` }]);
-    setChatInput("");
+  const handleGenerateImage = async (prompt: string) => {
+    if (isStreaming || isGeneratingImage) return;
+    setChatMessages(prev => [...prev, { role: "user", content: `🖼️ Generate: ${prompt}` }]);
     setIsGeneratingImage(true);
 
     try {
@@ -224,6 +222,21 @@ const LessonDetail = () => {
     } finally {
       setIsGeneratingImage(false);
     }
+  };
+
+  const parseResourceSuggestions = (content: string) => {
+    const lines = content.split("\n");
+    const suggestions: string[] = [];
+    const otherLines: string[] = [];
+    for (const line of lines) {
+      const match = line.match(/^\d+\.\s*RESOURCE:\s*(.+)/i);
+      if (match) {
+        suggestions.push(match[1].trim());
+      } else {
+        otherLines.push(line);
+      }
+    }
+    return { suggestions, introText: otherLines.join("\n").trim() };
   };
 
   return (
@@ -545,19 +558,44 @@ const LessonDetail = () => {
                       }`}>
                         {msg.role === "user" ? msg.content : (
                           <>
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                            {(() => {
+                              const { suggestions, introText } = parseResourceSuggestions(msg.content);
+                              return (
+                                <>
+                                  {introText && <ReactMarkdown>{introText}</ReactMarkdown>}
+                                  {suggestions.length > 0 && (
+                                    <div className="mt-2 space-y-1.5">
+                                      {suggestions.map((s, si) => (
+                                        <button
+                                          key={si}
+                                          onClick={() => handleGenerateImage(s)}
+                                          disabled={isGeneratingImage || isStreaming}
+                                          className="w-full text-left px-3 py-2 rounded-lg border border-border bg-background hover:bg-primary/10 hover:border-primary/30 transition-colors text-xs flex items-center gap-2 disabled:opacity-50"
+                                        >
+                                          <Image className="h-3.5 w-3.5 text-primary shrink-0" />
+                                          <span>{s}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {suggestions.length === 0 && msg.imageUrl && (
+                                    <img src={msg.imageUrl} alt="Generated visual aid" className="mt-2 rounded-lg max-w-full" />
+                                  )}
+                                  {msg.imageUrl && suggestions.length === 0 && msg.content && msg.content.length > 50 && (
+                                    <button
+                                      onClick={() => downloadMarkdownAsPdf(msg.content, `resource-${Date.now()}.pdf`)}
+                                      className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
+                                      title="Download as PDF"
+                                    >
+                                      <Download className="h-3.5 w-3.5" />
+                                      Download PDF
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
                             {msg.imageUrl && (
                               <img src={msg.imageUrl} alt="Generated visual aid" className="mt-2 rounded-lg max-w-full" />
-                            )}
-                            {msg.content && msg.content.length > 50 && (
-                              <button
-                                onClick={() => downloadMarkdownAsPdf(msg.content, `resource-${Date.now()}.pdf`)}
-                                className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
-                                title="Download as PDF"
-                              >
-                                <Download className="h-3.5 w-3.5" />
-                                Download PDF
-                              </button>
                             )}
                           </>
                         )}
@@ -584,15 +622,6 @@ const LessonDetail = () => {
                     className="min-h-[40px] max-h-[80px] text-sm resize-none"
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
                   />
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={handleGenerateImage}
-                    disabled={!chatInput.trim() || isStreaming || isGeneratingImage}
-                    title="Generate image"
-                  >
-                    <Image className="h-4 w-4" />
-                  </Button>
                   <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim() || isStreaming || isGeneratingImage}>
                     <Send className="h-4 w-4" />
                   </Button>
