@@ -1,16 +1,11 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/PageHeader";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
-import ReactMarkdown from "react-markdown";
-import { toast } from "sonner";
-import { downloadMarkdownAsPdf } from "@/lib/generatePdf";
 import {
   classrooms,
   lessons,
@@ -28,11 +23,6 @@ import {
   BookOpen,
   CheckCircle2,
   XCircle,
-  MessageCircle,
-  X,
-  Send,
-  Sparkles,
-  Download,
   Plus,
   Trash2,
   Upload,
@@ -45,12 +35,6 @@ import { Input } from "@/components/ui/input";
 
 const LessonDetail = () => {
   const { classroomId, subjectId, lessonId } = useParams();
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ role: "user" | "assistant"; content: string; imageUrl?: string }[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-
   const classroom = classrooms.find(c => c.id === classroomId);
   const lesson = lessons.find(l => l.id === lessonId);
   const classStudents = classroom ? getClassroomStudents(classroom.id) : [];
@@ -63,42 +47,6 @@ const LessonDetail = () => {
   const [newCurr, setNewCurr] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: number; type: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const buildLessonContext = useCallback(() => {
-    // Gather previous lessons for this classroom+subject to get goal achievement history
-    const classroomLessons = lessons.filter(
-      l => l.classroomId === classroomId && l.subjectId === subjectId && l.status === "completed"
-    );
-    const studentHistory = classStudents.map(s => {
-      const pastResults = classroomLessons.map(pl => {
-        const fb = pl.studentFeedback[s.id];
-        if (!fb) return null;
-        return { lesson: pl.title, goalMet: fb.met, notes: fb.notes };
-      }).filter(Boolean);
-      return {
-        name: s.name,
-        aetLevel: s.aetLevel,
-        britishCurriculumLevel: s.britishCurriculumLevel,
-        strengths: s.strengths,
-        supportNeeds: s.supportNeeds,
-        aetSkills: s.aetSkills,
-        notes: s.notes,
-        previousGoalAchievement: pastResults,
-      };
-    });
-
-    return {
-      lessonTitle: lesson?.title || "",
-      lessonDate: lesson?.date || "",
-      lessonStatus: lesson?.status || "",
-      goals: lesson?.goals || [],
-      activities: lesson?.activities || [],
-      aetTargets,
-      curriculumObjectives: currObjectives,
-      uploadedFiles: uploadedFiles.map(f => f.name),
-      students: studentHistory,
-    };
-  }, [lesson, aetTargets, currObjectives, uploadedFiles, classStudents, classroomId, subjectId]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -127,156 +75,6 @@ const LessonDetail = () => {
   const EditIcon = () => (
     <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-primary cursor-pointer transition-colors inline-block ml-1" />
   );
-
-  const handleSendChat = async () => {
-    if (!chatInput.trim() || isStreaming) return;
-    const userMsg = chatInput.trim();
-    const userMessage = { role: "user" as const, content: userMsg };
-    setChatMessages(prev => [...prev, userMessage]);
-    setChatInput("");
-    setIsStreaming(true);
-
-    let assistantSoFar = "";
-    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lesson-ai`;
-
-    try {
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          messages: [...chatMessages, userMessage].map(m => ({ role: m.role, content: m.content })),
-          lessonContext: buildLessonContext(),
-        }),
-      });
-
-      if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({}));
-        throw new Error(errData.error || `Error ${resp.status}`);
-      }
-      if (!resp.body) throw new Error("No response body");
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let streamDone = false;
-
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") { streamDone = true; break; }
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantSoFar += content;
-              const snapshot = assistantSoFar;
-              setChatMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === "assistant") {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: snapshot } : m);
-                }
-                return [...prev, { role: "assistant", content: snapshot }];
-              });
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
-      }
-    } catch (e: any) {
-      console.error("Chat error:", e);
-      toast.error(e.message || "Failed to get AI response");
-      setChatMessages(prev => prev.filter(m => !(m.role === "assistant" && m.content === "")));
-    } finally {
-      setIsStreaming(false);
-    }
-  };
-
-  const handleGenerateImageDirect = async (directPrompt: string) => {
-    if (!directPrompt.trim() || isStreaming || isGeneratingImage) return;
-    const prompt = directPrompt.trim();
-    setChatMessages(prev => [...prev, { role: "user", content: `🖼️ Generate image: ${prompt}` }]);
-    setChatInput("");
-    setIsGeneratingImage(true);
-
-    try {
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ prompt }),
-      });
-
-      if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({}));
-        throw new Error(errData.error || `Error ${resp.status}`);
-      }
-
-      const data = await resp.json();
-      setChatMessages(prev => [...prev, {
-        role: "assistant",
-        content: data.text || "Here's your generated image:",
-        imageUrl: data.imageUrl || undefined,
-      }]);
-    } catch (e: any) {
-      console.error("Image generation error:", e);
-      toast.error(e.message || "Failed to generate image");
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
-
-  const handleGenerateImage = async () => {
-    if (!chatInput.trim() || isStreaming || isGeneratingImage) return;
-    const prompt = chatInput.trim();
-    setChatMessages(prev => [...prev, { role: "user", content: `🖼️ Generate image: ${prompt}` }]);
-    setChatInput("");
-    setIsGeneratingImage(true);
-
-    try {
-      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ prompt }),
-      });
-
-      if (!resp.ok) {
-        const errData = await resp.json().catch(() => ({}));
-        throw new Error(errData.error || `Error ${resp.status}`);
-      }
-
-      const data = await resp.json();
-      setChatMessages(prev => [...prev, {
-        role: "assistant",
-        content: data.text || "Here's your generated image:",
-        imageUrl: data.imageUrl || undefined,
-      }]);
-    } catch (e: any) {
-      console.error("Image generation error:", e);
-      toast.error(e.message || "Failed to generate image");
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -550,156 +348,6 @@ const LessonDetail = () => {
           </Card>
         </motion.div>
       </main>
-
-      {/* AI Pedagogical Partner FAB */}
-      <>
-          <motion.button
-            className="fixed bottom-6 right-6 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 transition-transform z-50"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setChatOpen(true)}
-            aria-label="AI Pedagogical Partner"
-          >
-            <Sparkles className="h-6 w-6" />
-          </motion.button>
-
-          <AnimatePresence>
-            {chatOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                className="fixed bottom-6 right-6 w-[560px] max-h-[75vh] bg-card border rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden"
-              >
-                <div className="flex items-center justify-between px-4 py-3 border-b bg-primary/5">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <span className="font-semibold text-sm">AI Pedagogical Partner</span>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setChatOpen(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[350px]">
-                  {chatMessages.length === 0 && (
-                    <div className="text-center text-sm text-muted-foreground py-8">
-                      <Sparkles className="h-8 w-8 mx-auto mb-3 text-primary/40" />
-                      <p>Ask me to generate resources, differentiate materials, or suggest activities for your students.</p>
-                    </div>
-                  )}
-                  {chatMessages.map((msg, i) => {
-                    // Extract image prompts from assistant messages
-                    const extractImagePrompts = (content: string): { cleanContent: string; prompts: string[] } => {
-                      const prompts: string[] = [];
-                      const lines = content.split("\n");
-                      const cleanLines: string[] = [];
-                      let inResourceSection = false;
-                      for (const line of lines) {
-                        if (line.includes("📸 Visual Resources You Can Generate")) {
-                          inResourceSection = true;
-                          continue;
-                        }
-                        if (inResourceSection && line.trim().startsWith("- 🖼️")) {
-                          prompts.push(line.trim().replace(/^-\s*🖼️\s*/, ""));
-                        } else if (inResourceSection && line.trim() === "") {
-                          continue;
-                        } else {
-                          if (inResourceSection && !line.trim().startsWith("- 🖼️")) inResourceSection = false;
-                          cleanLines.push(line);
-                        }
-                      }
-                      return { cleanContent: cleanLines.join("\n").trim(), prompts };
-                    };
-
-                    const isAssistant = msg.role === "assistant";
-                    const { cleanContent, prompts: imagePrompts } = isAssistant ? extractImagePrompts(msg.content) : { cleanContent: msg.content, prompts: [] };
-
-                    return (
-                      <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm ${
-                          msg.role === "user"
-                            ? "bg-primary text-primary-foreground whitespace-pre-wrap"
-                            : "bg-muted text-foreground prose prose-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0.5 prose-headings:my-2 max-w-none"
-                        }`}>
-                          {msg.role === "user" ? msg.content : (
-                            <>
-                              <ReactMarkdown>{cleanContent}</ReactMarkdown>
-                              {imagePrompts.length > 0 && (
-                                <div className="mt-3 space-y-1.5 not-prose">
-                                  <p className="text-[11px] font-semibold text-muted-foreground">📸 Generate a visual:</p>
-                                  {imagePrompts.map((prompt, pi) => (
-                                    <button
-                                      key={pi}
-                                      onClick={() => {
-                                        setChatInput(prompt);
-                                        handleGenerateImageDirect(prompt);
-                                      }}
-                                      disabled={isGeneratingImage || isStreaming}
-                                      className="w-full text-left px-2.5 py-1.5 rounded-lg border border-border hover:border-primary/40 hover:bg-primary/5 text-[11px] text-foreground transition-colors flex items-center gap-2 disabled:opacity-50"
-                                    >
-                                      <Image className="h-3.5 w-3.5 text-primary shrink-0" />
-                                      {prompt}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                              {msg.imageUrl && (
-                                <img src={msg.imageUrl} alt="Generated visual aid" className="mt-2 rounded-lg max-w-full" />
-                              )}
-                              {cleanContent && cleanContent.length > 50 && (
-                                <button
-                                  onClick={() => downloadMarkdownAsPdf(msg.content, `resource-${Date.now()}.pdf`)}
-                                  className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-primary transition-colors"
-                                  title="Download as PDF"
-                                >
-                                  <Download className="h-3.5 w-3.5" />
-                                  Download PDF
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {isGeneratingImage && (
-                    <div className="flex justify-start">
-                      <div className="max-w-[85%] px-3 py-2 rounded-xl text-sm bg-muted text-foreground">
-                        <div className="flex items-center gap-2">
-                          <Image className="h-4 w-4 animate-pulse text-primary" />
-                          <span className="text-muted-foreground">Generating image...</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t p-3 flex gap-2">
-                  <Textarea
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                    placeholder="Generate resources for this lesson..."
-                    className="min-h-[40px] max-h-[80px] text-sm resize-none"
-                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
-                  />
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    onClick={handleGenerateImage}
-                    disabled={!chatInput.trim() || isStreaming || isGeneratingImage}
-                    title="Generate image"
-                  >
-                    <Image className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" onClick={handleSendChat} disabled={!chatInput.trim() || isStreaming || isGeneratingImage}>
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-      </>
 
     </div>
   );
