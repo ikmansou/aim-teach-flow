@@ -49,6 +49,34 @@ const LessonDetail = () => {
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: number; type: string }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newFiles = Array.from(files).map(f => ({ name: f.name, size: f.size, type: f.type }));
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith("image/")) return <Image className="h-4 w-4 text-yusr-sky" />;
+    if (type.includes("spreadsheet") || type.includes("excel") || type.includes("csv")) return <FileSpreadsheet className="h-4 w-4 text-yusr-emerald" />;
+    if (type.includes("video")) return <FileVideo className="h-4 w-4 text-yusr-coral" />;
+    if (type.includes("pdf")) return <FileText className="h-4 w-4 text-destructive" />;
+    return <File className="h-4 w-4 text-muted-foreground" />;
+  };
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  if (!classroom || !lesson) return <div className="p-8">Lesson not found.</div>;
+
+  const EditIcon = () => (
+    <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-primary cursor-pointer transition-colors inline-block ml-1" />
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <PageHeader />
