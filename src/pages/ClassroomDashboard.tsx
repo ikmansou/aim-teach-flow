@@ -1,16 +1,18 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import {
   classrooms,
   subjects,
-  getClassroomStudents,
+  students as allStudentsMap,
   getAetBgClass,
 } from "@/data/mockData";
-import { BookOpen, Calculator, FlaskConical, Palette, Dumbbell, Heart, Lock, Users, Sun, Waves, Palmtree, Bird } from "lucide-react";
+import { BookOpen, Calculator, FlaskConical, Palette, Dumbbell, Heart, Lock, Users, Sun, Waves, Palmtree, Bird, Pencil, Plus, Check, UserMinus } from "lucide-react";
 
 // Student photo imports
 import omarPhoto from "@/assets/students/omar.png";
@@ -76,11 +78,16 @@ const aetSkillColors: Record<string, string> = {
 const ClassroomDashboard = () => {
   const { classroomId } = useParams();
   const navigate = useNavigate();
-
   const classroom = classrooms.find(c => c.id === classroomId);
+
+  const [studentIds, setStudentIds] = useState<string[]>(classroom?.studentIds || []);
+  const [isEditing, setIsEditing] = useState(false);
+
   if (!classroom) return <div className="p-8">Classroom not found.</div>;
 
-  const classStudents = getClassroomStudents(classroom.id);
+  const classStudents = studentIds.map(id => allStudentsMap[id]).filter(Boolean);
+  const allStudents = Object.values(allStudentsMap);
+  const availableStudents = allStudents.filter(s => !studentIds.includes(s.id));
   const theme = classroomThemes[classroom.id] || classroomThemes.c1;
 
   return (
@@ -94,7 +101,7 @@ const ClassroomDashboard = () => {
           ]}
         />
 
-        {/* Classroom Banner — matches /classrooms card style */}
+        {/* Classroom Banner */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className={`relative rounded-2xl overflow-hidden h-28 bg-gradient-to-br ${theme.gradient} flex items-center px-8 gap-5`}>
             <div className={`w-14 h-14 rounded-2xl ${theme.iconBg} flex items-center justify-center shadow-lg shrink-0`}>
@@ -155,7 +162,45 @@ const ClassroomDashboard = () => {
             <div className="flex items-center gap-2 mb-5">
               <Users className="h-5 w-5 text-muted-foreground" />
               <h2 className="font-display text-lg font-bold text-foreground">Students</h2>
+              <span className="text-xs text-muted-foreground ml-1">({classStudents.length})</span>
+              <Button
+                variant={isEditing ? "default" : "ghost"}
+                size="sm"
+                className="ml-auto h-8 gap-1.5 text-xs"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? <><Check className="h-3.5 w-3.5" /> Done</> : <><Pencil className="h-3.5 w-3.5" /> Edit</>}
+              </Button>
             </div>
+
+            <AnimatePresence>
+              {isEditing && availableStudents.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mb-4 overflow-hidden"
+                >
+                  <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Add students to this classroom:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {availableStudents.map(s => (
+                        <button
+                          key={s.id}
+                          onClick={() => setStudentIds(prev => [...prev, s.id])}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-card border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors text-sm"
+                        >
+                          <Plus className="h-3.5 w-3.5 text-primary" />
+                          <span className="font-medium text-foreground">{s.name}</span>
+                          <Badge variant="outline" className="text-[9px] h-4 px-1">{s.aetLevel}</Badge>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {classStudents.map((student, i) => (
                 <motion.div
@@ -163,16 +208,16 @@ const ClassroomDashboard = () => {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.12 + i * 0.05 }}
+                  layout
                 >
                   <div
-                    className="cursor-pointer group rounded-2xl overflow-hidden border border-border bg-card hover:shadow-lg hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
-                    onClick={() => navigate(`/classroom/${classroom.id}/student/${student.id}`)}
+                    className={`group rounded-2xl overflow-hidden border border-border bg-card transition-all duration-300 ${
+                      isEditing ? "" : "cursor-pointer hover:shadow-lg hover:border-primary/30 hover:-translate-y-1"
+                    }`}
+                    onClick={() => !isEditing && navigate(`/classroom/${classroom.id}/student/${student.id}`)}
                   >
-                    {/* Colored top strip based on AET level */}
                     <div className={`h-2 ${getAetBgClass(student.aetLevel)}`} />
-
                     <div className="flex items-start gap-4 p-4">
-                      {/* Photo */}
                       <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-muted shadow-sm shrink-0">
                         <img
                           src={studentPhotos[student.photo] || ""}
@@ -180,13 +225,11 @@ const ClassroomDashboard = () => {
                           className="w-full h-full object-cover"
                         />
                       </div>
-
-                        <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex-1 min-w-0 space-y-2">
                         <div>
                           <p className="font-display font-bold text-foreground text-sm truncate">{student.name}</p>
                           <p className="text-[11px] text-muted-foreground">Age {student.age} · {student.grade}</p>
                         </div>
-
                         <div className="flex flex-wrap items-center gap-1">
                           {student.aetSkills.map((skill, idx) => (
                             <Badge key={idx} className={`${aetSkillColors[skill.color]} text-[9px] px-1.5 py-0 h-[18px] font-medium border`}>
@@ -195,6 +238,18 @@ const ClassroomDashboard = () => {
                           ))}
                         </div>
                       </div>
+                      {isEditing && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setStudentIds(prev => prev.filter(id => id !== student.id));
+                          }}
+                          className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors mt-1"
+                          title={`Remove ${student.name}`}
+                        >
+                          <UserMinus className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </motion.div>
